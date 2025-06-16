@@ -19,6 +19,9 @@ efi_partition="/dev/sda1"
 swap_partition="/dev/sda2"
 root_partition="/dev/sda3"
 btrfs_label="Arch"
+efi_label="EFI"
+swap_label="Swap"
+grub_label="GRUB"
 
 packages=(
     "base"
@@ -135,10 +138,10 @@ default_install() {
         ## Create GUID Partition Table(GPT)
         parted $format_disk mklabel gpt
         ## Create EFI system Partition
-        parted $format_disk mkpart "[EFI]" fat32 1MiB "$efi_size$unit"
+        parted $format_disk mkpart $efi_label fat32 1MiB "$efi_size$unit"
         parted $format_disk set 1 esp on
         ## Create Swap Partition
-        parted $format_disk mkpart "[SWAP]" linux-swap "$efi_size$unit" "$(($efi_size+$swap_size))$unit"
+        parted $format_disk mkpart $swap_label linux-swap "$efi_size$unit" "$(($efi_size+$swap_size))$unit"
         ## Create Root Partition
         parted $format_disk mkpart "/" ext4 "$(($efi_size+$swap_size))$unit" 100%
         parted $format_disk type 3 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709
@@ -149,22 +152,37 @@ default_install() {
     echo -e "$INFO Format partition..."
     mkfs.fat -F32 $efi_partition
     mount --mkdir $efi_partition /mnt/boot
-
     mkswap $swap_partition
     swapon $swap_partition
-    ## btrfs, need package: btrfs-progs?
+
+    ## btrfs, live need package: btrfs-progs
+    pacman -S btrfs-progs -y
     mkfs.btrfs -fL $btrfs_label $root_partition
     mount -t btrfs -o compress=zstd $root_partition /mnt
     btrfs subvolume create /mnt/@
     btrfs subvolume create /mnt/@home
-    mount -t btrfs -o subvol=/@,compress=zstd {root} /mnt
-    mount --mkdir -t btrfs -o subvol=/@home,compress=zstd {root} /mnt/home
+    btrfs check /dev/sda3; result=$?
+    if [ $result -eq 0 ]; then
+        echo -e "$WARN btrfs error. (code: $result) try fixing..."
+        btrfs check /dev/sda3 --repair; result=$?
+        if [ $result -eq 0 ]; then
+            echo -e "$ERROR btrfs error exit. (code: $result)"
+            exit 3
+        fi
+    fi
+    mount -t btrfs -o subvol=/@,compress=zstd $root_partition /mnt
+    mount --mkdir -t btrfs -o subvol=/@home,compress=zstd $root_partition /mnt/home
     ## ext4
     #mkfs.ext4 $root_partition
     #mount $root_partition /mnt
+
     # Generate fstab Partition Table
-    echo -e "$INFO Generate fstab..."
-    genfstab -U /mnt > /mnt/etc/fstab
+    genfstab -U /mnt > /mnt/etc/fstab; result=$?
+    if [ $result -eq 0 ]; then
+        echo -e "$ERROR genfstab error exit. (code: $result)"
+        exit 4
+        vim /mnt/etc/fstab
+    fi
 
     # Install Base packages
     echo -e "$INFO Base packages install..."
@@ -194,7 +212,7 @@ default_install() {
     arch-chroot /mnt sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
     ## Gurb
     echo -e "$INFO Setting gurb..."
-    arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+    arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=$grub_label
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
     ## dhcpcd
     echo -e "$INFO Enable dhcpcd..."
@@ -220,7 +238,7 @@ default_install() {
     mkdir /home/$username/.config/nvim/lua/core
     printf "%s\n" "${file_options[@]}" > /home/$username/.config/nvim/lua/core/options.lua
     printf "%s\n" "${file_keymaps[@]}" > /home/$username/.config/nvim/lua/core/keymaps.lua
-    EOF
+	EOF
 
     echo -e "$OK Setup finsh!"
     # Umount
