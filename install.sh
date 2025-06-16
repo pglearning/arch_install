@@ -11,6 +11,7 @@ mirrors=(
     "Server = https://mirrors.ustc.edu.cn/archlinux/\$repo/os/\$arch"
 )
 format_disk="/dev/sda"   # "" disable, Disk must formated befor disable
+# format_disk=""
 efi_size=1
 swap_size=4
 unit="GiB"
@@ -129,8 +130,7 @@ default_install() {
     echo "##" >> /etc/pacman.d/mirrorlist
     echo "" >> /etc/pacman.d/mirrorlist
     printf "%s\n" "${mirrors[@]}" >> /etc/pacman.d/mirrorlist
-
-    echo /etc/pacman.d/mirrorlist
+    cat /etc/pacman.d/mirrorlist
 
     # Format Disk (gpt + uefi)
     if [ $format_disk != "" ]; then
@@ -156,33 +156,32 @@ default_install() {
     swapon $swap_partition
 
     ## btrfs, live need package: btrfs-progs
-    pacman -S btrfs-progs -y
-    mkfs.btrfs -fL $btrfs_label $root_partition
-    mount -t btrfs -o compress=zstd $root_partition /mnt
-    btrfs subvolume create /mnt/@
-    btrfs subvolume create /mnt/@home
-    btrfs check /dev/sda3; result=$?
-    if [ $result -eq 0 ]; then
-        echo -e "$WARN btrfs error. (code: $result) try fixing..."
-        btrfs check /dev/sda3 --repair; result=$?
-        if [ $result -eq 0 ]; then
-            echo -e "$ERROR btrfs error exit. (code: $result)"
-            exit 3
-        fi
-    fi
-    mount -t btrfs -o subvol=/@,compress=zstd $root_partition /mnt
-    mount --mkdir -t btrfs -o subvol=/@home,compress=zstd $root_partition /mnt/home
+    # pacman -S btrfs-progs -y
+    # mkfs.btrfs -fL $btrfs_label $root_partition
+    # mount -t btrfs -o compress=zstd $root_partition /mnt
+    # btrfs subvolume create /mnt/@
+    # btrfs subvolume create /mnt/@home
+    # btrfs check /dev/sda3; result=$?
+    # if [ $result -eq 0 ]; then
+    #     echo -e "$WARN btrfs error. (code: $result) try fixing..."
+    #     btrfs check /dev/sda3 --repair; result=$?
+    #     if [ $result -eq 0 ]; then
+    #         echo -e "$ERROR btrfs error exit. (code: $result)"
+    #         exit 3
+    #     fi
+    # fi
+    # mount -t btrfs -o subvol=/@,compress=zstd $root_partition /mnt
+    # mount --mkdir -t btrfs -o subvol=/@home,compress=zstd $root_partition /mnt/home
+
     ## ext4
-    #mkfs.ext4 $root_partition
-    #mount $root_partition /mnt
+    mkfs.ext4 $root_partition
+    mount $root_partition /mnt
 
     # Generate fstab Partition Table
-    genfstab -U /mnt > /mnt/etc/fstab; result=$?
-    if [ $result -eq 0 ]; then
-        echo -e "$ERROR genfstab error exit. (code: $result)"
-        exit 4
-        vim /mnt/etc/fstab
-    fi
+    mkdir /mnt/etc
+    genfstab -U /mnt > /mnt/etc/fstab
+    echo -e "$INFO Check /mnt/etc/fstab"
+    cat /mnt/etc/fstab
 
     # Install Base packages
     echo -e "$INFO Base packages install..."
@@ -229,26 +228,23 @@ default_install() {
         arch-chroot /mnt passwd $username
     fi
     ## neovim
-    echo -e "$INFO Setting neovim..."
-    arch-chroot /mnt <<-EOF
-    mkdir /home/$username/.config
-    mkdir /home/$username/.config/nvim
-    printf "require("core.options")\nrequire("core.keymaps")" > /home/$username/.config/nvim/init.lua
-    mkdir /home/$username/.config/nvim/lua
-    mkdir /home/$username/.config/nvim/lua/core
-    printf "%s\n" "${file_options[@]}" > /home/$username/.config/nvim/lua/core/options.lua
-    printf "%s\n" "${file_keymaps[@]}" > /home/$username/.config/nvim/lua/core/keymaps.lua
-	EOF
+    # echo -e "$INFO Setting neovim..."
+    # arch-chroot /mnt <<-EOF
+    # mkdir /home/$username/.config
+    # mkdir /home/$username/.config/nvim
+    # printf "require("core.options")\nrequire("core.keymaps")" > /home/$username/.config/nvim/init.lua
+    # mkdir /home/$username/.config/nvim/lua
+    # mkdir /home/$username/.config/nvim/lua/core
+    # printf "%s\n" "${file_options[@]}" > /home/$username/.config/nvim/lua/core/options.lua
+    # printf "%s\n" "${file_keymaps[@]}" > /home/$username/.config/nvim/lua/core/keymaps.lua
+	# EOF
 
     echo -e "$OK Setup finsh!"
     # Umount
+    echo -e "$INFO umount..."
     umount -R /mnt
     # Reboot now
-    read -rep $'Reboot now? [Y/n]' reboot
-    reboot=${reboot:-y}
-    if [[ $reboot == "Y" || $reboot == "y" ]]; then
-        reboot
-    fi
+    reboot
 
 }
 
