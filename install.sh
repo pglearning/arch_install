@@ -31,7 +31,7 @@ packages=(
     "linux"
     "linux-headers"
     "linux-firmware"
-    "btrfs-progs"
+    #"btrfs-progs"
     "grub"
     "efibootmgr"
     #"sudo"
@@ -40,6 +40,9 @@ packages=(
     #"intel-ucode"
     #"iwd"
     "dhcpcd"
+    "man"
+    "less"
+    "bc"
     "neovim"
     #"curl"
     #"tar"
@@ -96,6 +99,9 @@ default_install() {
     printf "%s\n" "${mirrors[@]}" >> /etc/pacman.d/mirrorlist
     cat /etc/pacman.d/mirrorlist
 
+    # Keyring update (live pacman download issue)
+    pacman -Sy archlinux-keyring
+
     # Format Disk (gpt + uefi)
     if [ $format_disk != "" ]; then
         echo -e "$INFO Format disk..."
@@ -112,19 +118,9 @@ default_install() {
     fi
     # TODO: What if /dev/sda[1-3] not exist
     
-    # Format Partition
-    echo -e "$INFO Format partition..."
-    sleep 1
-    mkfs.fat -F32 $efi_partition
-    mount --mkdir $efi_partition /mnt/boot
-    mkswap $swap_partition
-    swapon $swap_partition
-
     ## btrfs, live need package: btrfs-progs
-    ## pacman -Sy archlinux-keyring
     # pacman -S btrfs-progs -y
     # mkfs.btrfs -fL $btrfs_label $root_partition
-    # mount -t btrfs -o compress=zstd $root_partition /mnt
     # btrfs subvolume create /mnt/@
     # btrfs subvolume create /mnt/@home
     # btrfs check /dev/sda3; result=$?
@@ -136,12 +132,23 @@ default_install() {
     #         exit 3
     #     fi
     # fi
+    # mount -t btrfs -o compress=zstd $root_partition /mnt
     # mount -t btrfs -o subvol=/@,compress=zstd $root_partition /mnt
     # mount --mkdir -t btrfs -o subvol=/@home,compress=zstd $root_partition /mnt/home
 
-    ## ext4
+    # ext4 format
     mkfs.ext4 $root_partition
-    mount $root_partition /mnt
+
+    # Format EFI and Swap Partition
+    echo -e "$INFO Format partition..."
+    sleep 1
+    mkfs.fat -F32 $efi_partition
+    mkswap $swap_partition
+    swapon $swap_partition
+    
+    # Mount to live
+    mount --mkdir $root_partition /mnt
+    mount --mkdir $efi_partition /mnt/boot
 
     # Generate fstab Partition Table
     mkdir /mnt/etc
@@ -150,10 +157,11 @@ default_install() {
 
     # Install Base packages
     echo -e "$INFO Base packages install..."
-    pacman -Sy archlinux-keyring
     pacstrap -K /mnt ${packages[@]} -y
 
     # Setup System 
+    ## NOTE: "arch-chroot /mnt echo string > file" not working
+    ## NOTE: "arch-chroot /mnt <<EOF" or "<<-EOF" output all line, cant use if []; then
     ## Timezone & Generate /etc/adjtime
     arch-chroot /mnt echo -e "$INFO Setting timezone..."
     arch-chroot /mnt ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -163,10 +171,10 @@ default_install() {
     arch-chroot /mnt sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
     arch-chroot /mnt sed -i 's/#zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/' /etc/locale.gen
     arch-chroot /mnt locale-gen
-    arch-chroot /mnt echo LANG=en_US.UTF-8 > /etc/locale.conf
+    arch-chroot /mnt echo "LANG=en_US.UTF-8" > /etc/locale.conf   # may not working
     ## Hostname
     arch-chroot /mnt echo -e "$INFO Setting hostname..."
-    arch-chroot /mnt echo $hostname > /etc/hostname
+    arch-chroot /mnt echo "$hostname" > /etc/hostname   # may not working
     ## Passwd root
     arch-chroot /mnt echo -e "$INFO Enter root password: "
     arch-chroot /mnt passwd root
