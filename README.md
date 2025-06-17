@@ -1,4 +1,8 @@
-# TODO
+# Update
+    add btrfs filesystem
+    fix script language wrong
+# TODO?
+    add install.conf && source install.conf
     LINE 118 # btrfs version
     architecture check
     disk check
