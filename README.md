@@ -21,11 +21,12 @@
   - architecture check
   - fix passwd root set ignore failure continue running
   - fix cant find program dir ./myconfig
+  - add systemd-boot ext4 & btrfs support (has be uefi. replace grub)
 
 # TODO?
-  - add systemd-boot (has be uefi. replace grub)
   - add BOOT + MBR support
   - add install.conf && source install.conf
   
 # ISSUE
+  - systemd-boot not support btrfs?
   
