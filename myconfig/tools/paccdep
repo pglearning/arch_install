@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# args check
+if [ -z $* ] || [ -z $1 ]; then
+    echo "paccdep <package_name>"
+    exit 1
+fi
+
+deps=$(pactree -l $1)
+
+for dep in $deps; do
+    if pacman -Qi "$dep" &> /dev/null; then
+        echo -e "    已安装✔ $dep"
+    else
+        echo "  未安装❌ $dep"
+    fi
+done

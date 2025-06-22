@@ -23,7 +23,6 @@ archmirrors_country="CN"
 filesystem="btrfs"
 # Only support systemd-boot and grub, default=systemd-boot
 bootloader="grubs"
-# ISSUE: systemd-boot not support btrfs?
 
 # "" disable, Disk must formated befor disable
 format_disk="/dev/sda"

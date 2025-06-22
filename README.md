@@ -28,5 +28,4 @@
   - add install.conf && source install.conf
   
 # ISSUE
-  - systemd-boot not support btrfs?
   
