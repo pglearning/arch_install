@@ -38,7 +38,7 @@ spilt_boot="true"
 
 # "" disable, Disk must formated befor disable
 format_disk="/dev/sda"
-efi_size=101
+efi_size=101        # spilt_boot=true, efi=efi+boot
 boot_size=924
 swap_size=4096
 unit="MiB"
