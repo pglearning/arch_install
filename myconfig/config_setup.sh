@@ -2,6 +2,7 @@
 
 # Output Level
 OK="[\e[32m OK \e[0m]"
+INPUT="[\e[34m INPUT \e[0m]"
 INFO="[\e[36m INFO \e[0m]"
 WARN="[\e[33m WARN \e[0m]"
 ERROR="[\e[31m ERROR \e[0m]"
@@ -13,24 +14,24 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # System Update
-pacman -Syu --noconfirm --needed
+pacman -Syu --noconfirm
 
 # Check users
 users=($(users))
 if [ -z "$users" ]; then
-    read -ep "$INFO No user in this computer, continue setting will setup root config, Are you sure? [y/N] " keep_run
+    echo -e "$INPUT No user in this computer, continue setting will setup root config, Are you sure? [y/N] "
+    read -re keep_run
     keep_run=${keep_run:-n}
-    if [ "$keep_run" == "n" -o "$keep_run" == "N" ]; then
-        exit 2
-    fi
-    USER_HOME=$HOME
+    if [ "$keep_run" == "n" -o "$keep_run" == "N" ]; then exit 2; fi
+    USER_HOME="/root"
 else
     if [ ${#users[@]} -eq 2 ]; then
         USER_HOME="/home/${users[0]}"
     else
         while true; do
             echo "${users[@]}"
-            read -ep "$INFO Enter what user you want to setup config: " username
+            echo -e  "$INPUT Enter what user you want to setup config: "
+            read -re username
             if printf '%s\n' "${users[@]}" | grep -qxF "$username"; then
                 USER_HOME="/home/$username"
                 break
@@ -39,7 +40,7 @@ else
         done
     fi
 fi
-echo -e "$WARN home=$USER_HOME"
+echo -e "$INFO home=$USER_HOME"
 
 # Has be same dir with this script
 if [[ -n "$0" && "$0" != "-bash" ]]; then   # /dir/filename
@@ -52,11 +53,18 @@ if [[ "$script_path" == */* ]]; then        # /dir
 else
     SCRIPT_DIR=$script_path
 fi
+echo -e "$INFO script_dir=$SCRIPT_DIR"
 
 # dhcpcd, need root
 if ! pacman -Q dhcpcd; then pacman -S dhcpcd --noconfirm --needed; fi
 systemctl enable dhcpcd --now
 echo -e "$OK dhcpcd setup."
+# iwd
+echo "[General]" > /etc/iwd/main.conf
+echo "EnableNetworkConfiguration=true" > /etc/iwd/main.conf
+echo "NameResolvingService=systemd" > /etc/iwd/main.conf
+systemctl enable iwd.service --now
+echo -e "$OK iwd setup."
 
 # Github hosts, need root
 cp "${SCRIPT_DIR}/hosts" "/etc/hosts"
@@ -101,9 +109,15 @@ echo -e "$OK tools/paccdep setup."
 
 ## Microcode package
 if lscpu | grep 'Intel'; then
-    if ! pacman -Q intel-ucode; then pacman -S intel-ucode --noconfirm --needed; fi
+    if ! pacman -Q intel-ucode; then
+        pacman -S intel-ucode --noconfirm --needed
+        echo -e "$OK intel-ucode install."
+    fi
 elif lscpu | grep 'AMD'; then
-    if ! pacman -Q amd-ucode; then pacman -S amd-ucode --noconfirm --needed; fi
+    if ! pacman -Q amd-ucode; then
+        pacman -S amd-ucode --noconfirm --needed
+        echo -e "$OK amd-ucode install."
+    fi
 fi
 
 # Custom packages
@@ -130,7 +144,7 @@ packages=(
     #"amd-ucode"    #"intel-ucode"
 )
 for pkg in "${packages[@]}"; do
-    if ! pacman -Q "$pkg"; then pacman -S ${packages[@]} --noconfirm --needed; fi
+    if ! pacman -Q "$pkg"; then pacman -S ${packages[@]} --noconfirm; fi
 done
 ## alsa
 if amixer | grep 'Master'; then amixer sset Master unmute; fi

@@ -19,27 +19,58 @@ mirrors=(
 )
 archmirrors_country="CN"
 
-# Only support ext4 and btrfs, default=ext4
+# Only support ext4 & btrfs. default=ext4
 filesystem="btrfs"
-# Only support systemd-boot and grub, default=systemd-boot
-bootloader="grubs"
+# Only support systemd-boot & grub. default=systemd-boot
+bootloader="systemd"
+# Spilt EFI & BOOT partition (/efi /boot /).  true & false. default=false (/boot /)
+spilt_boot="true"
+## Test: archlinux-2025.05.01-x86_64.iso -- VWware 17.6.3 -- UEFI -- NO secure boot
+# [PASS] btrfs+grub+true
+# [PASS] btrfs+grub+false
+# [PASS] btrfs+systemd+true
+# [PASS] btrfs+systemd+false
+# [PASS] ext4+grub+true
+# [PASS] ext4+grub+false
+# [PASS] ext4+systemd+true
+# [PASS] ext4+systemd+false
+# It works anyway...
 
 # "" disable, Disk must formated befor disable
 format_disk="/dev/sda"
-efi_size=1025
+efi_size=101
+boot_size=924
 swap_size=4096
 unit="MiB"
 
-efi_partition="$format_disk""1"
-swap_partition="$format_disk""2"
-root_partition="$format_disk""3"
-
-efi_label="EFI"
+efi_label="efi"
+boot_label="boot"
 swap_label="SWAP"
 btrfs_label="btrfs"
-
-root_label="root"
+root_label="arch_os"
 grub_label="GRUB"
+# process
+if [ "$spilt_boot" = "true" ]; then
+    root_partition_index="4"
+    efi_partition="$format_disk""1"
+    boot_partition="$format_disk""2"
+    swap_partition="$format_disk""3"
+    root_partition="$format_disk""$root_partition_index"
+
+    efi_path="/efi"
+    boot_path="/boot"
+
+else
+    efi_size=$(($efi_size+$boot_size))
+    root_partition_index="3"
+    efi_partition="$format_disk""1"
+    boot_partition=$efi_partition
+    swap_partition="$format_disk""2"
+    root_partition="$format_disk""$root_partition_index"
+    
+    efi_path="/boot"
+    boot_path="/boot"
+fi
 
 packages=(
     "base"
@@ -47,8 +78,6 @@ packages=(
     "linux"
     "linux-headers"
     "linux-firmware"
-    "grub"
-    "efibootmgr"
     #"amd-ucode"     #"intel-ucode"
     "iwd"            #"networkmanager"
     "dhcpcd"
@@ -56,8 +85,9 @@ packages=(
     "man"
     "less"
     "bc"
-    "vi"
+    "vi"            # "nano"
     "neovim"        #"gvim"
+    "ttf-sourcecodepro-nerd"
     "adobe-source-han-serif-cn-fonts"
     "bluez"         # 蓝牙
     #"curl"
@@ -66,8 +96,11 @@ packages=(
     #"git"
     #"sudo"
     #"zsh"
+    # "grub"
+    # "efibootmgr"
 )
-if [ $filesystem == "btrfs" ]; then packages+=("btrfs-progs"); fi
+if [ $bootloader == "grub" ]; then packages+=( "grub" "efibootmgr" ); fi
+if [ $filesystem == "btrfs" ]; then packages+=( "btrfs-progs" ); fi
 # -- Configuration
 
 # Output Level
@@ -144,25 +177,32 @@ default_install() {
         ## Create EFI system Partition
         parted $format_disk mkpart $efi_label fat32 0% "$efi_size$unit"
         parted $format_disk set 1 esp on
+        if [ "$spilt_boot" = "true" ]; then
+            ## Create Linux extended boot
+            tempsize1=$(($efi_size+$boot_size))
+            ### NOTE: mkfs.ext4 $boot_partition (only fat32. cant use filesystem)
+            ### NOTE: /efi/loader/loader.conf , menu loader has be inside efi
+            ### NOTE: /mnt/boot/loader/entries/arch.conf has be same dir with /boot/initramfs-linux-fallback.img?
+            parted $format_disk mkpart $boot_label fat32 "$efi_size$unit" "$tempsize1$unit"
+            parted $format_disk type 2 bc13c2ff-59e6-4262-a352-b275fd6f7172
+        else
+            tempsize1=$efi_size
+        fi
         ## Create Swap Partition
-        parted $format_disk mkpart $swap_label linux-swap "$efi_size$unit" "$(($efi_size+$swap_size))$unit"
+        tempsize2+=$swap_size
+        parted $format_disk mkpart $swap_label linux-swap "$tempsize1$unit" "$tempsize2$unit"
         ## Create Root Partition
         if [ "$filesystem" == "btrfs" ]; then
-            parted $format_disk mkpart $root_label btrfs "$(($efi_size+$swap_size))$unit" 100%
+            parted $format_disk mkpart $root_label btrfs "$tempsize2$unit" 100%
         else
-            parted $format_disk mkpart $root_label ext4 "$(($efi_size+$swap_size))$unit" 100%
+            parted $format_disk mkpart $root_label ext4 "$tempsize2$unit" 100%
         fi
-        parted $format_disk type 3 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709
+        parted $format_disk type $root_partition_index 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709
         echo -e "$OK Format disk ${format_disk}."
     fi
     
-    # Format Partition
-    sleep 1
-    mkfs.fat -F32 $efi_partition
-    mkswap $swap_partition
-    swapon $swap_partition
     # compress= "zstd": forcing compression; "lzo" fast raw compression; autodefrag
-    if [ "$filesystem" == "btrfs" ]; then
+    if [ "$filesystem" = "btrfs" ]; then
         ## btrfs, live need package: btrfs-progs
         mkfs.btrfs -fL $btrfs_label $root_partition
         mount --mkdir -t btrfs -o compress=lzo,autodefrag $root_partition /mnt
@@ -185,21 +225,29 @@ default_install() {
         mkfs.ext4 $root_partition
         mount --mkdir $root_partition /mnt
     fi
-    # Mount to live
-    mount --mkdir $efi_partition /mnt/boot
+    # Format Partition
+    sleep 1
+    mkfs.fat -F32 $efi_partition
+    mount --mkdir $efi_partition /mnt$efi_path  # Mount to live
+    if [ "$spilt_boot" = "true" ]; then
+        mkfs.fat -F32 $boot_partition
+        mount --mkdir $boot_partition /mnt$boot_path    # Mount to live
+    fi
+    mkswap $swap_partition
+    swapon $swap_partition
+    echo -e "$OK Format partition."
 
     # Generate fstab Partition Table
     mkdir /mnt/etc
     genfstab -U /mnt > /mnt/etc/fstab
-    cat /mnt/etc/fstab
-    echo -e "$OK Format partition."
+    echo -e "$OK Generate fstab Partition Table."
 
     # Install Base packages
     pacstrap -K /mnt ${packages[@]} --noconfirm --needed
     echo -e "$OK Basic packages install."
 
     # Setup System 
-    ## NOTE: "arch-chroot /mnt echo string > file" not working
+    ## NOTE: "arch-chroot /mnt sh -c "echo 'string' > file"
     ## NOTE: "arch-chroot /mnt <<EOF" or "<<-EOF" output all line, cant use if []; then
     ## Timezone & Generate /etc/adjtime
     arch-chroot /mnt ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
@@ -242,46 +290,55 @@ default_install() {
     
     if [ "$bootloader" = "grub" ]; then
         ## Grub
-        arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=$grub_label
-        arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
+        arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=$efi_path --boot-directory=$boot_path
+        arch-chroot /mnt grub-mkconfig -o $boot_path/grub/grub.cfg
         echo -e "$OK Setup grub."
+        # cat /mnt$boot_path/grub/grub.cfg
     else
-        ## systemd-boot
-        arch-chroot /mnt bootctl --esp-path=/boot --boot-path=/boot install     # auto find esp-path (/efi /boot/efi /boot) boot-path (/boot)
+        ## systemd-boot, --esp-path=$efi_path --boot-path=$boot_path 
+        arch-chroot /mnt bootctl install     # auto find esp-path (/efi /boot/efi /boot) boot-path (/boot)
         ## systemd-boot-pacman-hook
         if ! [ -d "/mnt/etc/pacman.d/" ]; then mkdir /mnt/etc/pacman.d; fi
         if ! [ -d "/mnt/etc/pacman.d/hooks/" ]; then mkdir /mnt/etc/pacman.d/hooks; fi
-        arch-chroot /mnt sh -c "echo '[Trigger]' > /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo 'Type = Package' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo 'Operation = Upgrade' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo 'Target = systemd' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo '' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo '[Action]' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo 'Description = Gracefully upgrading systemd-boot...' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo 'When = PostTransaction' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
-        arch-chroot /mnt sh -c "echo 'Exec = /usr/bin/systemctl restart systemd-boot-update.service' >> /etc/pacman.d/hooks/95-systemd-boot.hook"
+        echo "[Trigger]" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "Type = Package" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "Operation = Upgrade" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "Target = systemd" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "[Action]" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "Description = Gracefully upgrading systemd-boot..." >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "When = PostTransaction" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        echo "Exec = /usr/bin/systemctl restart systemd-boot-update.service" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
         arch-chroot /mnt bootctl update
         ### loader menu, console-mode can be set by auto, keep (hardware resolution)
-        echo 'default  arch.conf' > /mnt/boot/loader/loader.conf
-        echo 'timeout  3' >> /mnt/boot/loader/loader.conf
-        echo 'console-mode auto' >> /mnt/boot/loader/loader.conf
-        echo 'editor   1' >> /mnt/boot/loader/loader.conf
+        if ! [ -d "/mnt$efi_path/loader" ]; then mkdir /mnt$efi_path/loader; fi
+        echo "default  arch.conf" > /mnt$efi_path/loader/loader.conf        # /efi load loader menu
+        echo "timeout  3" >> /mnt$efi_path/loader/loader.conf
+        echo "console-mode auto" >> /mnt$efi_path/loader/loader.conf
+        echo "editor   1" >> /mnt$efi_path/loader/loader.conf
         ### loadconf
         ROOT_UUID=$(blkid -s UUID -o value $root_partition)
         root_flags=""
         if [ "$filesystem" == "btrfs" ]; then
             root_flags="rootflags=subvol=@"
         fi
-        arch-chroot /mnt sh -c "echo 'title   Arch Linux' > /boot/loader/entries/arch.conf"
-        arch-chroot /mnt sh -c "echo 'linux   /vmlinuz-linux' >> /boot/loader/entries/arch.conf"
-        arch-chroot /mnt sh -c "echo 'initrd  /initramfs-linux.img' >> /boot/loader/entries/arch.conf"
-        arch-chroot /mnt sh -c "echo 'options root=UUID=$ROOT_UUID rw $root_flags' >> /boot/loader/entries/arch.conf"
-
-        arch-chroot /mnt sh -c "echo 'title   Arch Linux (fallback initramfs)' > /boot/loader/entries/arch-fallback.conf"
-        arch-chroot /mnt sh -c "echo 'linux   /vmlinuz-linux' >> /boot/loader/entries/arch-fallback.conf"
-        arch-chroot /mnt sh -c "echo 'initrd  /initramfs-linux-fallback.img' >> /boot/loader/entries/arch-fallback.conf"
-        arch-chroot /mnt sh -c "echo 'options root=UUID=$ROOT_UUID rw $root_flags' >> /boot/loader/entries/arch-fallback.conf"
+        if ! [ -d "/mnt$boot_path/loader/entries" ]; then mkdir /mnt$boot_path/loader/entries; fi
+        echo "title   Arch Linux" > /mnt$boot_path/loader/entries/arch.conf
+        echo "linux   /vmlinuz-linux" >> /mnt$boot_path/loader/entries/arch.conf
+        echo "initrd  /initramfs-linux.img" >> /mnt$boot_path/loader/entries/arch.conf
+        echo "options root=UUID=$ROOT_UUID rw $root_flags" >> /mnt$boot_path/loader/entries/arch.conf
+        ## options root=UUID=$ROOT_UUID; root=\"LABEL=$root_label\"
+        echo "title   Arch Linux (fallback initramfs)" > /mnt$boot_path/loader/entries/arch-fallback.conf
+        echo "linux   /vmlinuz-linux" >> /mnt$boot_path/loader/entries/arch-fallback.conf
+        echo "initrd  /initramfs-linux-fallback.img" >> /mnt$boot_path/loader/entries/arch-fallback.conf
+        echo "options root=UUID=$ROOT_UUID rw $root_flags" >> /mnt$boot_path/loader/entries/arch-fallback.conf
         echo -e "$OK Setup systemd-boot."
+        ## debug
+        cat /mnt$boot_path/loader/loader.conf
+        cat /mnt$boot_path/loader/entries/arch.conf
+        cat /mnt$boot_path/loader/entries/arch-fallback.conf
+        ### arch-chroot /mnt bootctl
+        ### arch-chroot /mnt bootctl list
     fi
 
     # (opt)Custom Setting
@@ -301,8 +358,12 @@ default_install() {
             script_path="${script_path%/*}"
         fi
         cp -r $script_path/myconfig /mnt/home/$username/
+        chmod +x /mnt/home/$username/myconfig/config_setup.sh
         echo -e "$OK Copy to /home/$username/myconfig finsh!"
     fi
+
+    ## debug
+    cat /mnt/etc/fstab
 
     echo -e "$OK All setup finsh!"
     # Reboot now
