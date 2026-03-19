@@ -17,7 +17,7 @@ mirrors=(
 archmirrors_country="CN"
 
 # uefi_gpt_btrfs_grub_install
-format_disk="/dev/sda"
+format_disk="/dev/nvme0n1"
 efi_size=301
 swap_size=16384
 unit="MiB"
