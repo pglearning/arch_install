@@ -23,7 +23,7 @@ return {
                 "ninja", "rst",
             },
             highlight = { enable = true },
-            indent = { enable = true },
+            indent = { enable = false },
             auto_install = vim.fn.executable("tree-sitter"),
         },
         config = function(_, opts)

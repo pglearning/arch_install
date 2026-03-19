@@ -22,9 +22,9 @@ archmirrors_country="CN"
 # Only support ext4 & btrfs. default=ext4
 filesystem="btrfs"
 # Only support systemd-boot & grub. default=systemd-boot
-bootloader="systemd"
+bootloader="grub"
 # Spilt EFI & BOOT partition (/efi /boot /).  true & false. default=false (/boot /)
-spilt_boot="true"
+spilt_boot="false"
 ## Test: archlinux-2025.05.01-x86_64.iso -- VWware 17.6.3 -- UEFI -- NO secure boot
 # [PASS] btrfs+grub+true
 # [PASS] btrfs+grub+false
@@ -37,7 +37,7 @@ spilt_boot="true"
 # It works anyway...
 
 # "" disable, Disk must formated befor disable
-format_disk="/dev/sda"
+format_disk="/dev/sdc"
 efi_size=101        # spilt_boot=true, efi=efi+boot
 boot_size=924
 swap_size=4096
@@ -78,18 +78,18 @@ packages=(
     "linux"
     "linux-headers"
     "linux-firmware"
-    #"amd-ucode"     #"intel-ucode"
-    "iwd"            #"networkmanager"
+    #"amd-ucode"        #"intel-ucode"
+    "iwd"               #"networkmanager"
     "dhcpcd"
-    "usbmuxd"       # 通过usb连接手机共享网络
+    "usbmuxd"           # 通过usb连接手机共享网络
     "man"
     "less"
     "bc"
-    "vi"            # "nano"
-    "neovim"        #"gvim"
-    "ttf-sourcecodepro-nerd"
+    "nano"              # "vi"
+    "neovim"            #"gvim"
+    "ttf-meslo-nerd"
     "adobe-source-han-serif-cn-fonts"
-    "bluez"         # 蓝牙
+    "bluez"             # 蓝牙
     #"curl"
     #"tar"
     #"gzip"
@@ -126,7 +126,10 @@ if ! fdisk -l | grep "$format_disk"; then
     exit 3
 fi
 # Tip
-printf "$INPUT Continue will wipe all data from disk ${format_disk}. Are you sure? [Y/n] "
+# /enter'/dev/nvme0n1p1'
+fdisk -l
+
+printf "$INPUT Continue will wipe all data from disk [ ${format_disk} ]. Are you sure? [Y/n] "
 read -re WIPE_DISK
 WIPE_DISK=${WIPE_DISK:-y}
 if [ "$WIPE_DISK" == "n" -o "$WIPE_DISK" == "N" ]; then exit 4; fi
@@ -167,7 +170,7 @@ default_install() {
 
     # Keyring update (live pacman download issue)
     pacman -Sy archlinux-keyring --noconfirm
-    pacman -Sy --noconfirm
+    pacman -Sy --noconfirm      # upgrade sys may have some old package dep issue
 
     # Format Disk (gpt + uefi)
     if [ "$format_disk" != "" ]; then
@@ -189,7 +192,7 @@ default_install() {
             tempsize1=$efi_size
         fi
         ## Create Swap Partition
-        tempsize2+=$swap_size
+        tempsize2=$(($tempsize1+$swap_size))
         parted $format_disk mkpart $swap_label linux-swap "$tempsize1$unit" "$tempsize2$unit"
         ## Create Root Partition
         if [ "$filesystem" == "btrfs" ]; then
@@ -226,7 +229,7 @@ default_install() {
         mount --mkdir $root_partition /mnt
     fi
     # Format Partition
-    sleep 1
+    # sleep 1
     mkfs.fat -F32 $efi_partition
     mount --mkdir $efi_partition /mnt$efi_path  # Mount to live
     if [ "$spilt_boot" = "true" ]; then
@@ -298,18 +301,18 @@ default_install() {
         ## systemd-boot, --esp-path=$efi_path --boot-path=$boot_path 
         arch-chroot /mnt bootctl install     # auto find esp-path (/efi /boot/efi /boot) boot-path (/boot)
         ## systemd-boot-pacman-hook
-        if ! [ -d "/mnt/etc/pacman.d/" ]; then mkdir /mnt/etc/pacman.d; fi
-        if ! [ -d "/mnt/etc/pacman.d/hooks/" ]; then mkdir /mnt/etc/pacman.d/hooks; fi
-        echo "[Trigger]" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "Type = Package" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "Operation = Upgrade" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "Target = systemd" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "[Action]" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "Description = Gracefully upgrading systemd-boot..." >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "When = PostTransaction" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        echo "Exec = /usr/bin/systemctl restart systemd-boot-update.service" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
-        arch-chroot /mnt bootctl update
+        # if ! [ -d "/mnt/etc/pacman.d/" ]; then mkdir /mnt/etc/pacman.d; fi
+        # if ! [ -d "/mnt/etc/pacman.d/hooks/" ]; then mkdir /mnt/etc/pacman.d/hooks; fi
+        # echo "[Trigger]" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "Type = Package" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "Operation = Upgrade" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "Target = systemd" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "[Action]" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "Description = Gracefully upgrading systemd-boot..." >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "When = PostTransaction" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # echo "Exec = /usr/bin/systemctl restart systemd-boot-update.service" >> /mnt/etc/pacman.d/hooks/95-systemd-boot.hook
+        # arch-chroot /mnt bootctl update
         ### loader menu, console-mode can be set by auto, keep (hardware resolution)
         if ! [ -d "/mnt$efi_path/loader" ]; then mkdir /mnt$efi_path/loader; fi
         echo "default  arch.conf" > /mnt$efi_path/loader/loader.conf        # /efi load loader menu
@@ -347,20 +350,21 @@ default_install() {
     echo -e "$OK Enable pacman color."
 
     # Custom command
-    if [ -d "/mnt/home/$username" ]; then
-        # Has be same dir with this script
-        if [[ -n "$0" && "$0" != "-bash" ]]; then   # /dir/filename
-            script_path=$(realpath "$0")
-        else
-            script_path=$(realpath "${BASH_SOURCE[0]}")
-        fi
-        if [[ "$script_path" == */* ]]; then        # /dir
-            script_path="${script_path%/*}"
-        fi
+    # if [ -d "/mnt/home/$username" ]; then
+    #     # Has be same dir with this script
+    #     if [[ -n "$0" && "$0" != "-bash" ]]; then   # /dir/filename
+    #         script_path=$(realpath "$0")
+    #     else
+    #         script_path=$(realpath "${BASH_SOURCE[0]}")
+    #     fi
+    #     if [[ "$script_path" == */* ]]; then        # /dir
+    #         script_path="${script_path%/*}"
+    #     fi
+
         cp -r $script_path/myconfig /mnt/home/$username/
-        chmod +x /mnt/home/$username/myconfig/config_setup.sh
-        echo -e "$OK Copy to /home/$username/myconfig finsh!"
-    fi
+    #     chmod +x /mnt/home/$username/myconfig/config_setup.sh
+    #     echo -e "$OK Copy to /home/$username/myconfig finsh!"
+    # fi
 
     ## debug
     cat /mnt/etc/fstab

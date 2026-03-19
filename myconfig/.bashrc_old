@@ -1,0 +1,267 @@
+#
+# ~/.bashrc
+#
+#########################################################
+## Custom Bash
+#########################################################
+# If not running interactively, don't do anything   非交互式shell返回不加载
+[[ $- != *i* ]] && return
+## 256 bity colors
+user_color_fg="15"
+user_color_bg="69"
+host_color_fg="15"
+host_color_bg="75"
+fullpath_color_fg="15"
+fullpath_color_bg="215"
+space="  "
+strcolor_space() {
+    [[ $# -ne 3 ]] && return 1
+    echo -e "\[\e[38;5;${1}m\]\[\e[48;5;${2}m\]${space}${3}${space}\[\e[0m\]"
+}
+strcolor() {
+    local space=""
+    strcolor_space $1 $2 $3
+}
+user=$(strcolor_space $user_color_fg $user_color_bg "\u")
+bg_spilt1=$(strcolor $user_color_bg $host_color_bg "")
+
+host=$(strcolor_space $host_color_fg $host_color_bg "\h")
+bg_spilt2=$(strcolor $host_color_bg $fullpath_color_bg "")
+
+fullpath=$(strcolor_space $fullpath_color_fg $fullpath_color_bg "\w")
+bg_spilt_end=$(strcolor $fullpath_color_bg "0" "")
+PS1="${user}${bg_spilt1}${host}${bg_spilt2}${fullpath}${bg_spilt_end} "
+# PS1='[\u@\h \W]\$ '
+# \u: 用户名
+# \h: 主机名
+# \w: 当前完整路径
+# \W: 当前目录名 (不含路径)
+# \d: 日期
+# \t: 24小时制时间
+# \$: user show $, root show #
+#########################################################
+## Basic
+#########################################################
+if [ -f /usr/bin/fastfetch ]; then
+    fastfetch
+fi
+
+# Enable bash programmable completion features in interactive shells
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
+
+#########################################################
+## EXPORTS
+#########################################################
+export HISTFILESIZE=10000
+export HISTSIZE=500
+export HISTTIMEFORMAT="%F %T"
+
+# Dont put duplicate lines in the history & do not add lines that start with a space
+export HISTCONTROL="erasedups:ignoredups:ignorespace"
+
+#########################################################
+## FUNCTIONS
+#########################################################
+# Alt+h Mimic Zsh run-help ability
+run-help() { help "$READLINE_LINE" 2>/dev/null || man "$READLINE_LINE"; }
+bind -m vi-insert -x '"\eh": run-help'
+bind -m emacs -x     '"\eh": run-help'
+
+paccdep() {
+    # args check
+    if [ -z $* ] || [ -z $1 ]; then
+        echo "paccdep <package_name>"
+        return 1
+    fi
+    if ! [[ -x "$(command -v pactree)" ]]; then
+        echo "Command pactree not exist. Please install [pacman-contrib] package first!"
+        return 2
+    fi
+    local deps=$(pactree -l $1)
+    for dep in $deps; do
+        if pacman -Qi "$dep" &> /dev/null; then
+            echo -e "    已安装✔ $dep"
+        else
+            echo "  未安装❌ $dep"
+        fi
+    done
+    return 0
+}
+
+cbrc_alias() {
+    local alias_commands=$(grep -E '^alias ' ~/.bashrc | sed -E 's/alias +([^= ]+).*/\1/' | sort)
+    local duplicates=$(echo "$alias_commands" | uniq -d)
+    if [ -n "$duplicates" ]; then
+        echo "Find repeat alias:"
+        echo "  $duplicates"
+        echo -e "\nDetail:"
+        grep -E '^alias ' ~/.bashrc | grep -E "$(echo "  $duplicates" | tr '\n' '|' | sed 's/|$//')"
+        exit 1
+    else
+        echo "No repeat alias."
+        exit 0
+    fi
+}
+
+#########################################################
+## VISUAL
+#########################################################
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+
+alias dmesg='dmesg --color'
+
+if [[ -x "$(command -v nvim)" ]]; then
+    alias vi='nvim'
+    alias vim='nvim'
+    alias svi='sudo nvim'
+    alias vis='nvim "+set si"'
+    export EDITOR=nvim visudo
+    export VISUAL=nvim visudo
+    export SUDO_EDITOR=nvim
+    export FCEDIT=nvim
+elif [[ -x "$(command -v vim)" ]]; then
+    alias vi='vim'
+    alias svi='sudo vim'
+    alias vis='vim "+set si"'
+    export EDITOR=vim visudo
+    export VISUAL=vim visudo
+    export SUDO_EDITOR=vim
+    export FCEDIT=vim
+fi
+
+# Modified commands
+alias cp='cp -i'            # 复制文件时，覆盖文件提示
+alias mv='mv -i'            # 移动文件时，目标已存在，提示确认
+alias ln='ln -i'            # 链接文件或文件夹，移除目标前提示
+alias rm='rm -i --preserve-root'    # 删除文件前提示
+alias rmd='rm --recursive --force --verbose'   # 删除文件夹和所有文件
+# alias rm='trash -v'       # need trash-cli
+alias mkdir='mkdir -p'      # create parent dir if needed
+# When reporting a snapshot of the current processes:
+# a = all users
+# u = user-oriented format providing detailed information
+# x = list the processes without a controlling terminal
+# f = display a tree view of parent to child processes
+alias ps='ps auxf'
+alias cpu='ps aux | sort -r -nk +4 | head | $PAGER'     # Show top ten processse
+alias ping='ping -c 4'
+alias less='less -R'
+alias cls='clear'
+alias pacman='sudo pacman'
+
+# 显示 cd 前的路径
+alias pwd-='echo $OLDPWD'
+# 回到 上一个目录
+alias bd='cd "$OLDPWD'
+# 返回home 文件夹
+alias cd~='cd ~'
+# 允许少一个空格也能用
+alias cd..='cd ..'
+# 允许少一个空格也能用，跳转到cd 前的路径
+alias cd-='cd -'
+
+# Go back directories dot style
+alias ..='\cd ..'
+alias ...='\cd ../..'
+alias ....='\cd ../../..'
+alias .....='\cd ../../../..'
+# Go back directories dot dot number style
+alias ..2='..; ..'
+alias ..3='..2; ..'
+alias ..4='..3; ..'
+alias ..5='..4; ..'
+
+# LS
+export LS_COLORS="${LS_COLORS}ow=01;37;42:"
+alias ls='ls --color=always'
+alias lss='ls -FS'              # list files by size, 'F' if is dir add '/'
+alias lssr='ls -FSr'            # list files by size reverse
+alias lst='ls -Ft'              # list files by time
+alias lstr='ls -Ftr'            # list files by time reverse
+alias la='ls -FA'               # list all files include dotfile (no . and ..)
+alias laR='ls -FAR'             # list all files and dir subfiles
+# 's' is actual disk space (1byte data sill need a block, default block=4KB)
+alias ll='ls -Flhs --time-style="+%Y-%m-%d %H:%M:%S"'    # list table and show subfiles number, 'h' size type K,M,G etc.
+alias lls='ll -S'               # list table by size
+alias llsr='ll -Sr'             # list table by size reverse
+alias llt='ll -t'               # list table by time
+alias lltr='ll -tr'             # list table by time reverse
+alias ll.='ll -d .*'            # list table only dotfile
+alias lla='ll -A'               # list table all files include dotfile (no . and ..)
+alias llas='ll -AS'             # list table all files include dotfile, by size
+alias llasr='ll -ASr'           # list table all files include dotfile, by size reverse
+alias llat='ll -At'             # list table all files include dotfile, by time
+alias llatr='ll -Atr'           # list table all files include dotfile, by time reverse
+
+# find 从当前文件夹开始找，从根目录开始要管理员权限
+alias f='find . -name'
+alias ffile='find . -type f -iname'
+alias fdir='find . -type d -iname'
+
+# Count how many files in current directory
+alias countfiles='find . -type f | wc -l'
+
+# Check command is aliased, a file, or a built-in command
+alias check="type -t"
+
+# 不对 / 根目录做修改
+alias chown='chown --preserve-root'
+alias chmod='chmod --preserve-root'
+alias chgrp='chgrp --preserve-root'
+# chmod
+alias chax='chmod a+x'
+alias ch000='chmod -R 000'
+alias ch644='chmod -R 644'
+alias ch666='chmod -R 666'
+alias ch755='chmod -R 755'
+alias ch777='chmod -R 777'
+
+alias df='df --human-readable --print-type --exclude-type=squashfs'
+alias ds='df --human-readable --print-type --exclude-type=squashfs --exclude-type=tmpfs --exclude-type=devtmpfs'
+
+# tar
+alias mkbz2='tar -cvjf'
+alias unbz2='tar -xvjf'
+alias mkgz='tar -cvzf'
+alias ungz='tar -xvzf'
+alias mktar='tar -cvf'
+alias untar='tar -xvf'
+
+#########################################################
+## DATE AND TIME
+#########################################################
+
+alias now='date +"%T"'
+
+alias today='date +"%Y-%m-%d"'
+
+alias stopwatch='date && echo "Press CTRL-D to stop" && time read'
+
+#########################################################
+## CPU, MEMORY, PROCESSES
+#########################################################
+
+# Display amount of free and used memory
+alias free='free -h'
+
+# Show CPU information
+alias cpuinfo='lscpu | $PAGER'
+
+# Show the USB device tree
+if [[ -x "$(command -v lsusb)" ]]; then
+    alias pci='lsusb -t'
+fi
+
+# Show the PCI device tree
+if [[ -x "$(command -v lspci)" ]]; then
+    alias pci='lspci -tv'
+fi
+
+# Net
+alias ipaddr='ip addr'

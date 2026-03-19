@@ -7,6 +7,7 @@ vim.opt.shiftwidth = 4                  -- 自动缩进宽度
 vim.opt.expandtab = true                -- 将 Tab 转换为空格
 vim.opt.wrap = false                    -- 自动换行
 vim.opt.cursorline = true               -- 显示光标
+vim.opt.scrolloff=10                    -- 光标距离顶部和底部 n 行固定
 
 vim.opt.autoread = true                 -- 如果当前文件被外部程序修改, 会重新加载该文件
 vim.opt.autowrite = false               -- 自动保存
