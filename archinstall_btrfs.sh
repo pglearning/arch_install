@@ -35,26 +35,39 @@ packages=(
     "linux"
     "linux-headers"
     "linux-firmware"
-    "intel-ucode"        #"amd-ucode"
-    "iwd"               #"networkmanager"
-    "dhcpcd"
-    "usbmuxd"           # 通过usb连接手机共享网络
+    "networkmanager"
+    # "iwd"                 #"networkmanager" replace this
+    # "dhcpcd"              #"networkmanager" replace this
+    # "usbmuxd"             # 通过usb连接手机共享网络，networkmanager对iphone的usb上网不支持时才需要安装这个包
     "man"
-	"man-pages"
+    "man-pages"
     "less"
     # "bc"
-    # "nano"              # "vi"
-    "neovim"            #"gvim"
+    # "nano"                # "vi"
+    "neovim"                #"gvim"
     "ttf-meslo-nerd"
     "adobe-source-han-serif-cn-fonts"
-    "bluez"             # 蓝牙
+    "bluez"                 # 蓝牙
     "curl"
     "git"
     "tar"
     "gzip"
+    # !!! only for vmware virtual machines
+    # "mesa"
+    # "xf86-video-vmware"
+    # "open-vm-tools"
 )
 if [ $bootloader == "grub" ]; then packages+=( "grub" "efibootmgr" ); fi
 if [ $filesystem == "btrfs" ]; then packages+=( "btrfs-progs" ); fi
+if grep -q "GenuineIntel" /proc/cpuinfo; then
+    packages+=("intel-ucode")
+elif grep -q "AuthenticAMD" /proc/cpuinfo; then
+    packages+=("amd-ucode")
+fi
+
+# Log File
+LOGFILE="/root/arch_install_$(date +%Y%m%d_%H%M%S).log"
+exec > >(tee -a "$LOGFILE") 2>&1
 
 # process
 # '/dev/nvme0n1p1'  p1 not 1
@@ -103,13 +116,20 @@ if [ "$WIPE_DISK" == "n" -o "$WIPE_DISK" == "N" ]; then exit 4; fi
 
 # EFI system Partition mount /boot/efi, /boot is subvol
 uefi_gpt_btrfs_grub_install() {
-    # Network Test
-    if ping -c 1 -W 1 "$test_address"; then
-        echo -e "$OK ping success!"
-    else
-        echo -e "$ERROR ping loss or address invalid! (code: $?)"
-        exit 11
-    fi
+    # Network Testmax_retries=3
+    for i in $(seq 1 $max_retries); do
+        if ping -c 1 -W 2 "$test_address" >/dev/null 2>&1; then
+            echo -e "$OK Network connection successful"
+            break
+        elif [ $i -eq $max_retries ]; then
+            echo -e "$ERROR Network connection failed after $max_retries attempts"
+            exit 11
+        else
+            echo -e "$WARN Network connection failed, retrying in 3s... ($i/$max_retries)"
+            sleep 3
+        fi
+    done
+
     # Date & Time
     timedatectl set-ntp true
     timedatectl set-timezone $timezone
@@ -134,11 +154,13 @@ uefi_gpt_btrfs_grub_install() {
     echo -e "$OK mirrorlist overwrite."
     
     # Format Disk (gpt + uefi)
+    efi_end=$efi_size
+    swap_end=$((efi_size + swap_size))
     parted $format_disk mklabel gpt
-    parted $format_disk mkpart $efi_label fat32 0% "$efi_size$unit"
+    parted $format_disk mkpart $efi_label fat32 0% ${efi_end}${unit}
     parted $format_disk set 1 esp on
-    parted $format_disk mkpart $swap_label linux-swap "$efi_size$unit" "$(($efi_size+$swap_size))$unit"
-    parted $format_disk mkpart $root_label btrfs "$(($efi_size+$swap_size))$unit" 100%
+    parted $format_disk mkpart $swap_label linux-swap ${efi_end}${unit} ${swap_end}${unit}
+    parted $format_disk mkpart $root_label btrfs ${swap_end}${unit} 100%
     parted $format_disk type 3 4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709
     echo -e "$OK Format disk ${format_disk} finsh."
     # create btrfs subvolume
@@ -146,9 +168,12 @@ uefi_gpt_btrfs_grub_install() {
     mount --mkdir -t btrfs -o compress=zstd $root_partition /mnt
     btrfs subvolume create /mnt/@
     btrfs subvolume create /mnt/@home
+    btrfs subvolume create /mnt/@snapshots
+    btrfs property set /mnt/@snapshots ro true
     umount /mnt
     mount -t btrfs -o subvol=/@,compress=zstd $root_partition /mnt
     mount --mkdir -t btrfs -o subvol=/@home,compress=zstd $root_partition /mnt/home
+    mount --mkdir -t btrfs -o subvol=/@snapshots,compress=zstd $root_partition /mnt/.snapshots
     # efi mount to /boot/efi
     mkfs.fat -F32 $efi_partition
     mount --mkdir $efi_partition /mnt/boot/efi
@@ -162,12 +187,26 @@ uefi_gpt_btrfs_grub_install() {
     echo -e "$OK Generate fstab Partition Table."
     
     # Keyring update (live pacman download issue)
-    pacman -Sy archlinux-keyring --noconfirm
+    pacman -Syy archlinux-keyring --noconfirm
     # Install Base packages, core 'linux' and 'base' etc.
     pacstrap -K /mnt ${packages[@]} --noconfirm --needed
     echo -e "$OK Basic packages install."
 
     # Setup System
+    ## btrfs hooks fix
+    arch-chroot /mnt bash -c "echo 'MODULES=(btrfs)' >> /etc/mkinitcpio.conf"
+    arch-chroot /mnt sed -i 's/^HOOKS=.*/HOOKS=(base systemd autodetect modconf kms keyboard keymap consolefont block filesystems fsck)/' /etc/mkinitcpio.conf
+    ### for encrypt
+    #arch-chroot /mnt sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms keyboard keymap consolefont block encrypt btrfs filesystems fsck)/' /etc/mkinitcpio.conf
+    arch-chroot /mnt mkinitcpio -P
+    echo -e "$OK mkinitcpio configured for Btrfs"
+
+    ## Enable NetworkManager
+    arch-chroot /mnt systemctl enable NetworkManager
+    echo -e "$OK Enable NetworkManager"
+    ## Enable bluez
+    arch-chroot /mnt systemctl enable bluetooth
+
     ## Timezone & Generate /etc/adjtime
     arch-chroot /mnt ln -sf /usr/share/zoneinfo/$timezone /etc/localtime
     arch-chroot /mnt hwclock --systohc
@@ -205,7 +244,8 @@ uefi_gpt_btrfs_grub_install() {
         done
     fi
     ## Grub
-    arch-chroot /mnt grub-install
+    #arch-chroot /mnt grub-install  # Auto?
+    arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "$OK Setup grub."
 
@@ -215,6 +255,10 @@ uefi_gpt_btrfs_grub_install() {
     ## Enable pacman color
     arch-chroot /mnt sed -i 's/#Color/Color/' /etc/pacman.conf
     echo -e "$OK Enable pacman color."
+
+    # !!! only for vmware virtual machines
+    # arch-chroot /mnt systemctl enable vmtoolsd
+    # arch-chroot /mnt systemctl enable vmware-vmblock-fuse
 
     # script_path
     if [[ -n "$0" && "$0" != "-bash" ]]; then   # /dir/filename
@@ -226,10 +270,9 @@ uefi_gpt_btrfs_grub_install() {
         script_path="${script_path%/*}"
     fi
     # myconfig
-    if [[ -f "$script_path/myconfig" && -d "/mnt/home/$username/" ]]; then
-        
-
+    if [[ -d "$script_path/myconfig" && -d "/mnt/home/$username/" ]]; then
         cp -r $script_path/myconfig /mnt/home/$username/
+        arch-chroot /mnt chown -R $username:$username "/home/$username/myconfig"
     fi
     echo -e "$OK All setup finsh!"
 
@@ -249,4 +292,7 @@ uefi_gpt_btrfs_grub_install() {
     fi
 }
 
+start_time=$(date +%s)
 uefi_gpt_btrfs_grub_install
+end_time=$(date +%s)
+echo -e "$INFO Installation completed in $((end_time - start_time)) seconds"
