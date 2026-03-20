@@ -4,7 +4,7 @@ return {
         name = "catppuccin",
         opts = {
             flavour = "mocha",
-            term_colors = ture,
+            term_colors = true,
         },
         config = function(_, opts)
             require("catppuccin").setup(opts)

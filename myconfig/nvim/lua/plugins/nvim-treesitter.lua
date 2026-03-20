@@ -6,7 +6,7 @@ return {
         branch = 'master',
         build = ':TSUpdate',
         opts = {
-            ensur_installed = {
+            ensure_installed = {
                 "bash",
                 "diff",
                 "lua", "luadoc", "luap",
@@ -23,6 +23,7 @@ return {
                 "ninja", "rst",
             },
             highlight = { enable = true },
+			-- "=" 代码格式化，gg=G 格式整个文件 或 ggvG= 选择整个文件格式化
             indent = { enable = false },
             auto_install = vim.fn.executable("tree-sitter"),
         },

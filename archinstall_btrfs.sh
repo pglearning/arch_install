@@ -52,6 +52,7 @@ packages=(
     "git"
     "tar"
     "gzip"
+    "tmux"
     # !!! only for vmware virtual machines
     # "mesa"
     # "xf86-video-vmware"
