@@ -9,27 +9,28 @@ keymap({ "n", "v", "o" }, "<leader>nh", "<Esc>:nohl<CR>", { desc = "No highlight
 
 ---- Cursor
 ---- The 'W' uppercase word will not ignore symbol, 'w' ignore symbol
-keymap({ "n", "v", "o" }, "H", "B", { desc = "Move to previous word begin" })     -- Or use 'w' Move to next word begin
-keymap({ "n", "v", "o" }, "L", "E", { desc = "Move to next word end" })
-keymap({ "n", "v", "o" }, "J", "5j", { desc = "Move down 5 line" })
-keymap({ "n", "v", "o" }, "K", "5k", { desc = "Move up 5 line" })
+-- keymap({ "n", "v", "o" }, "H", "B", { desc = "Move to previous word begin" })     -- Or use 'w' Move to next word begin
+-- keymap({ "n", "v", "o" }, "L", "E", { desc = "Move to next word end" })
+-- keymap({ "n", "v", "o" }, "J", "5j", { desc = "Move down 5 line" })
+-- keymap({ "n", "v", "o" }, "K", "5k", { desc = "Move up 5 line" })
 -- keymap( "i", "<C-j>", "<C-o>j", { desc = "Move to previous line" })
 -- keymap( "i", "<C-k>", "<C-o>k", { desc = "Move to next line" })
 -- keymap( "i", "<C-h>", "<C-o>b", { desc = "Move to previous word begin" })
 -- keymap( "i", "<C-l>", "<C-o>e", { desc = "Move to next word begin" })
 
 ---- Move code
-keymap("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selected block code up" })
-keymap("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selected block code down" })
-keymap("v", ">", ">gv", { desc = "Add tab for line" })
-keymap("v", "<", "<gv", { desc = "Remove tab for line" })
+keymap("v", "<C-j>", ":m '>+1<CR>gv=gv", { desc = "Move selected block code up" })
+keymap("v", "<C-k>", ":m '<-2<CR>gv=gv", { desc = "Move selected block code down" })
+-- keymap("v", ">", ">gv", { desc = "Add tab for line" })
+-- keymap("v", "<", "<gv", { desc = "Remove tab for line" })
 
 ---- Copy Paste
 -- keymap("v", "y", '"+y', { desc = "Copy to + reg" })
 
 ---- File control
 keymap({ "n", "v", "o"}, "<leader>w", "<Esc>:w<CR>", { desc = "Save file" })
-keymap({ "n", "v", "o" }, "<leader>wq", "<Esc>:wq<CR>", { desc = "Save file and quit" })
+keymap({ "n", "v", "o"}, "<leader>q", "<Esc>:q<CR>", { desc = "Quit file" })
+-- keymap({ "n", "v", "o" }, "<leader>wq", "<Esc>:wq<CR>", { desc = "Save file and quit" })
 -- keymap({ "n", "v", "o" }, "<leader>e", ":e ", { desc = "Enter filename to edit new file" })
 
 ---- Window

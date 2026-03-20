@@ -15,8 +15,8 @@ return {
             default = { "path", "snippets", "buffer", "lsp" },
         },
         keymap = {
-            -- preset = "super-tab",
-            ["<C-y>"] = { "select_and_accept" },
+            preset = "super-tab",
+            -- ["<C-y>"] = { "select_and_accept" },
         },
         cmdline = {
             keymap = {

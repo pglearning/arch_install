@@ -1,0 +1,76 @@
+return {
+    -- LSP 配置核心
+    {
+        "neovim/nvim-lspconfig",
+        dependencies = {
+            -- 自动补全引擎
+            "saghen/blink.cmp",
+            -- 自动安装 LSP 服务器
+            { "williamboman/mason.nvim", config = true },
+            "williamboman/mason-lspconfig.nvim",
+        },
+        config = function()
+            -- 设置按键映射
+            local map = vim.keymap.set
+            local opts = { silent = true, buffer = bufnr }
+
+            -- 创建 on_attach 函数，当 LSP 附加到 buffer 时设置映射
+            local on_attach = function(client, bufnr)
+                -- LSP 相关映射
+                map("n", "gd", vim.lsp.buf.definition, opts)
+                map("n", "gr", vim.lsp.buf.references, opts)
+                map("n", "K", vim.lsp.buf.hover, opts)
+                map("n", "<leader>rn", vim.lsp.buf.rename, opts)
+                map("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+                map("n", "[d", vim.diagnostic.goto_prev, opts)
+                map("n", "]d", vim.diagnostic.goto_next, opts)
+                map("n", "<leader>e", vim.diagnostic.open_float, opts)
+            end
+
+            -- 通过 mason 自动安装 LSP 服务器
+            require("mason").setup()
+            require("mason-lspconfig").setup({
+                ensure_installed = {
+                    "lua_ls",      -- Lua
+                    "basedpyright", -- Python (更活跃的 pyright 分支)
+                    "ts_ls",       -- TypeScript/JavaScript (原 tsserver)
+                    "rust_analyzer", -- Rust
+                    "gopls",       -- Go
+                },
+                handlers = {
+                    -- 默认处理函数
+                    function(server_name)
+                        local capabilities = require("blink.cmp").get_lsp_capabilities()
+                        local opts = {
+                            capabilities = capabilities,
+                            on_attach = on_attach,
+                        }
+                        -- 对特定服务器进行自定义配置
+                        if server_name == "lua_ls" then
+                            opts.settings = {
+                                Lua = {
+                                    runtime = { version = "LuaJIT" },
+                                    diagnostics = { globals = { "vim" } },
+                                    workspace = {
+                                        library = vim.api.nvim_get_runtime_file("", true),
+                                        checkThirdParty = false,
+                                    },
+                                },
+                            }
+                        end
+                        require("lspconfig")[server_name].setup(opts)
+                    end,
+                },
+            })
+
+            -- 显示行内诊断信息
+            vim.diagnostic.config({
+                virtual_text = true,
+                signs = true,
+                underline = true,
+                update_in_insert = false,
+                severity_sort = true,
+            })
+        end,
+    },
+}
