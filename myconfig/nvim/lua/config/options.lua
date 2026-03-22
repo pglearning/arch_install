@@ -16,7 +16,7 @@ vim.opt.linebreak = true                -- 自动换行会在单词边界处换,
 vim.opt.cursorcolumn = false            -- 显示列高亮
 vim.opt.cursorline = true               -- 显示行高亮
 vim.opt.cursorlineopt = "both"          -- 高亮行的属性, 可以是(default "both"), "line", "screenline", "number"
-vim.opt.scrolloff = 10                  -- 光标距离顶部和底部 n 行固定
+vim.opt.scrolloff = 30                  -- 光标距离顶部和底部 n 行固定
 vim.opt.list = true                     -- 显示不可见字符, 比如默认为 Tab='>' 行尾空格='-' 不换行空格='+' (default) off
 vim.opt.listchars = "tab:>-,trail:-,nbsp:+,lead:·,conceal:*"  -- 显示不可见字符的格式, (default)"tab:> ,trail:-,nbsp:+"
 -- vim.opt.listchars = {                -- 同上, 另一种写法

@@ -7,12 +7,19 @@ local keymap = vim.keymap.set
 ---- Highlight
 keymap({ "n", "v", "o" }, "<leader>nh", "<Esc>:nohl<CR>", { desc = "No highlight" })
 
+---- Replace all string
+keymap({ "n", "v", "o" }, "<leader>r", ":%s/<C-r><C-w>//gI<Left><Left><Left>", { desc = "Replace all string" })
+-- keymap({ "n", "v", "o" }, "<leader>r", ":%s/\\<<C-r><C-w>\\>//gcI<Left><Left><Left><Left>", { desc = "Replace all string confirm each" })
+
+---- Comment
+-- keymap({ "n", "v", "o" }, "<C-/>", "gc", { desc = "Comment & Uncomment this line" })
+
 ---- Cursor
 ---- The 'W' uppercase word will not ignore symbol, 'w' ignore symbol
 -- keymap({ "n", "v", "o" }, "H", "B", { desc = "Move to previous word begin" })     -- Or use 'w' Move to next word begin
 -- keymap({ "n", "v", "o" }, "L", "E", { desc = "Move to next word end" })
--- keymap({ "n", "v", "o" }, "J", "5j", { desc = "Move down 5 line" })
--- keymap({ "n", "v", "o" }, "K", "5k", { desc = "Move up 5 line" })
+keymap({ "n", "v", "o" }, "J", "5j", { desc = "Move down 5 line" })
+keymap({ "n", "v", "o" }, "K", "5k", { desc = "Move up 5 line" })
 -- keymap( "i", "<C-j>", "<C-o>j", { desc = "Move to previous line" })
 -- keymap( "i", "<C-k>", "<C-o>k", { desc = "Move to next line" })
 -- keymap( "i", "<C-h>", "<C-o>b", { desc = "Move to previous word begin" })

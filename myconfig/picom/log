@@ -1,0 +1,1 @@
+[ 06/30/2025 18:17:36.051 sgi_video_sync_scheduler_callback WARN ] Duplicate vblank event found with msc 212130. Possible NVIDIA bug? Number of duplicates so far: 0

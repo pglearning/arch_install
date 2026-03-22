@@ -1,0 +1,7 @@
+
+configuration {
+    modi: "window,drun,ssh,combi";
+    font: "MesloLGS Nerd Font Mono:style=Bold 10";
+    combi-modi: "window,drun,ssh";
+}
+@theme "~/.config/rofi/catppuccin-default.rasi"
