@@ -1,0 +1,24 @@
+CompileFlags:
+  Add:
+    # C++
+    # - -std=c++20
+
+    # C
+    - -xc
+    - -std=c17
+
+    - -Wall
+    - -Wextra
+
+  Remove:
+  # - -mabi=lp64    # GCC specity Clang dont have this args
+
+# (opt) static check & wall
+Diagnostics:
+  # Suppress:
+    # - "unused-variable"   # Not wall the unuse variable
+    # - "unused-paramcter"
+
+  ClangTidy:
+    Add: [performance*, bugprone*]  # enable performance & bug check
+    # Remove: [modernize-use-trailing-return-type] # Remove checker

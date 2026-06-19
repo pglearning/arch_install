@@ -1,0 +1,6 @@
+2025-06-25T15:11:33 update: added /ts.mp3
+2025-06-25T15:14:02 exception: Failed to open "/home/usera/.config/mpd/state": No such file or directory
+2025-06-25T15:14:02 update: added /ts.mp3
+2025-06-25T16:00:57 exception: No such directory
+2025-06-25T16:05:35 player: played "ts.mp3"
+2025-06-25T16:07:22 player: played "ts.mp3"

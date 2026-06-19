@@ -1,0 +1,11 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =9
+let g:netrw_dirhist_9='/home/usera/dev/practice'
+let g:netrw_dirhist_8='/home/usera/.config/nvim'
+let g:netrw_dirhist_7='/home/usera/dev/practice'
+let g:netrw_dirhist_6='/home/usera/.config/nvim'
+let g:netrw_dirhist_5='/home/usera/dev/practice'
+let g:netrw_dirhist_4='/home/usera/.config/i3'
+let g:netrw_dirhist_3='/home/usera/.config/polybar'
+let g:netrw_dirhist_2='/home/usera/dev/practice'
+let g:netrw_dirhist_1='/home/usera/.config/nvim'

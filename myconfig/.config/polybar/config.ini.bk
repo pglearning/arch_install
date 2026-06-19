@@ -1,0 +1,133 @@
+;==========================================================
+;
+;
+;   ██████╗  ██████╗ ██╗  ██╗   ██╗██████╗  █████╗ ██████╗
+;   ██╔══██╗██╔═══██╗██║  ╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗
+;   ██████╔╝██║   ██║██║   ╚████╔╝ ██████╔╝███████║██████╔╝
+;   ██╔═══╝ ██║   ██║██║    ╚██╔╝  ██╔══██╗██╔══██║██╔══██╗
+;   ██║     ╚██████╔╝███████╗██║   ██████╔╝██║  ██║██║  ██║
+;   ╚═╝      ╚═════╝ ╚══════╝╚═╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+;
+;
+;   To learn more about how to configure Polybar
+;   go to https://github.com/polybar/polybar
+;
+;   The README contains a lot of information
+;
+;==========================================================
+[global/wm]
+include-file = $HOME/.config/polybar/mocha.ini
+include-file = $HOME/.config/polybar/modules.ini
+
+[colors]
+background = ${colors.base}
+background-alt = ${colors.sky}
+foreground = #FF888800
+foreground-alt = #FF888888
+border-color = #00000000
+primary = #FF880088
+secondary = #FF008888
+alert = #FF008800
+disabled = #FF000088
+
+border = #00000000
+module_title = #FF00FF00
+module_refer = #FF00FFFF
+
+
+[bar/mybar]
+; 使用环境变量设置显示器
+monitor = ${env:MONITOR}
+; 要求显示器处于连接状态
+monitor-strict = true
+; true时窗口界面会覆盖polybar
+override-redirect = false
+
+; ; 3.7.0新功能，修复全屏窗口绘制bar的位置问题, i3修复override-redirect = true
+; wm-restack = i3
+
+; 不同位置的模块
+modules-left = xworkspaces xwindow
+modules-center = date
+modules-right = systray filesystem pulseaudio xkeyboard memory cpu wlan eth
+
+; 显示在底部
+bottom = false
+; modules-center的固定中心位置，可以被左右推动
+fixed-center = true
+
+width = 100%
+height = 24px
+radius = 10
+; 渲染文本时使用的DPI值，为0时polybar根据屏幕大小计算dpi
+dpi = 96
+
+; 背景和前景色
+background = ${colors.background}
+foreground = ${colors.foreground}
+; {overline, underline}-{size, color} 下划线和上划线的大小和颜色？
+line-size = 3pt
+line-color = ${colors.background-alt}
+; 所有边框的大小, 可以单独设置, 支持百分比设置 1%
+;   border-{left, top, right, bottom}-{size, color}
+border-size = 4pt
+border-color = ${colors.border}
+; bar的左右 2 边 到第一个模块的内边距
+padding-left = 1
+padding-right = 1
+; 每个模块的边距，可以单独设置左右
+;   module-margin-{left, right}
+module-margin = 1
+; 使用的字体，font-{0,1,2,3}
+font-0 = monospace;2
+
+; 模块的分隔符
+separator = |
+separator-foreground = ${colors.foreground-alt}
+
+; 淡入/淡出时的不透明值，0.0 - 1.0
+dim-value = 1.0
+
+; 本地化设置，用于各种模块的数据，比如日期，需要有效的locale设置
+locale = zh_CN.UTF-8
+
+; 支持新的托盘模块，系统托盘的位置，center的托盘会覆盖居中的模块，这个设置只能在一个bar上使用，多屏幕会关闭其他bar
+;   = {left,center,right,none}
+tray-position = none
+; 如果为true，不会移动原本模块的位置（盖住原本模块）
+tray-detached = false
+; 托盘图标大最大大小
+tray-maxsize = 16
+; 偏移支持百分比，相对于bar的位置
+tray-offset-x = 0
+tray-offset-y = 0
+; 每个图标的边框
+tray-padding = 0
+; 托盘缩放比例
+tray-scale = 1.0
+; 背景/前景
+tray-background = ${colors.background}
+tray-foreground = ${colors.foreground}
+
+; 启用进程间消息传递的支持，详情看polybar git wiki
+enable-ipc = true
+
+; ; 默认的事件处理，如果没有找到匹配的处理模块时调用这个
+; click-left = 
+; click-middle = 
+; click-right =
+; scroll-up =
+; scroll-down =
+; double-click-left =
+; double-click-middle =
+; double-click-right =
+
+; 双击的间隔(ms)，在这个时间内点击2次被识别为双击
+double-click-interval = 400
+
+; 可点击模块，鼠标移动到上面时变化的样式。需要xcursor支持(xcb-util-cursor)
+; = {default, pointer (手指), ns-resize (上下箭头)}
+cursor-click = pointer
+cursor-scroll = ns-resize
+
+

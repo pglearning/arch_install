@@ -1,0 +1,37 @@
+// -*- mode: jsonc -*-
+{
+    "layer": "top", // Waybar at top layer
+    "position": "top", // Waybar position (top|bottom|left|right)
+    "height": 32, // Waybar height (to be removed for auto height)
+    "spacing": 0, // Gaps between modules (4px)
+    // "width": 1280, // Waybar width
+    // "output": ["eDP-1", "VGA"], // or not display "!eDP-1". different config [{output": "DP-1"...},{output": "HDMI-1"...}]
+    
+    // Load Modules
+    "include": ["~/.config/waybar/modules.json"],
+
+    // Choose the order of the modules
+    "modules-left": [
+        "sway/workspaces",
+        "tray",
+        "sway/mode",
+        "sway/window"
+        // "custom/media", // mpd
+    ],
+    "modules-center": ["clock"],
+    "modules-right": [
+        "network",
+        "battery",
+        "bluetooth",
+        "pulseaudio",
+        "backlight",
+        "custom/temperature",
+        "memory",
+        "cpu",
+
+        "custom/lock",
+        "custom/reboot",
+        "custom/power"
+    ],
+
+}
