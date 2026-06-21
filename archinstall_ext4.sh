@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Configuration
-
-HOSTNAME="archlinux"
+HOSTNAME="arch"
 TIMEZONE="Asia/Shanghai"
 LOCALE_1="zh_CN.UTF-8"
 LOCALE_2="zh_TW.UTF-8"
@@ -16,7 +15,7 @@ NET_TEST_MAX_ROUND=3
 # Rescue System
 # archlinux-2026.06.01-x86_64.iso
 ISO_DOWNLOAD_URL="https://mirrors.ustc.edu.cn/archlinux/iso/2026.06.01/archlinux-2026.06.01-x86_64.iso"
-ISO_SAVE_NAME="archlinux-x86_64.iso"
+ISO_FILENAME="archlinux-2026.06.01-x86_64.iso"
 
 MIRRORS=(
     "Server = https://mirrors.aliyun.com/archlinux/\$repo/os/\$arch"
@@ -25,12 +24,19 @@ MIRRORS=(
 )
 MIRRORS_COUNTRY="CN"
 
+# Grub system option name
+GRUB_OPT_NAME="ArchLinux"
+GRUB_OPT_RESCUE_NAME="Arch Linux Rescue (ISO Loopback)"
+
 # uefi_gpt_ext4_grub_install
 DISK="/dev/nvme0n1"
+UNIT="MiB"
 EFI_SIZE=512
 ROOT_SIZE=100000
+# "yes" option create /backup/ at single partition, else /backup/ with root path.
+CREATE_PARTITION_FOR_BACKUP="no"
+# only CREATE_PARTITION_FOR_BACKUP=yes enable BACKUP_SIZE
 BACKUP_SIZE=100000
-UNIT="MiB"
 
 BOOTLOADER="grub"
 FILESYSTEM="ext4"
@@ -41,6 +47,10 @@ HOME_LABEL="home"
 
 RESCUE_DIR="/rescue"
 SNAPSHOT_BASE="/backup/snapshots"
+EXCLUDE="/backup/exclude.list"
+SNAPSHOT_BACKUP="/usr/local/bin/snapshot-backup.sh"
+SNAPSHOT_RESTORE="/usr/local/bin/restore-snapshot.sh"
+
 SWAP_FILE="/swapfile"
 SWAP_SIZE="4G"          # 16G RAM, 4G for now
 
@@ -55,6 +65,7 @@ packages=(
     "less"
     "bc"                    # for cpu float math
     # "sudo"                  # arch install by default
+    "fastfetch"             # System Info
 
     "networkmanager"
     # "iwd"                 #"networkmanager" replace this
@@ -70,8 +81,10 @@ packages=(
     # "dosfstools"            # FAT support, for USB flash drive
     # "ntfs-3g"               # NTFS support, for portable hard drive
 
-    "ttf-meslo-nerd"
-    "adobe-source-han-serif-cn-fonts"
+    "fontconfig"            # 'fc-match', etc.
+    # "ttf-meslo-nerd"
+    # "adobe-source-han-serif-cn-fonts"
+    # "adobe-source-han-sans-cn-fonts"
     # "nano"                # "vi"
     "neovim"                # "gvim"
     "tmux"
@@ -96,6 +109,7 @@ packages=(
     # "xf86-video-vmware"
     # "open-vm-tools"
 )
+
 if [ $BOOTLOADER == "grub" ]; then packages+=( "grub" "efibootmgr" ); fi
 if [ $FILESYSTEM == "btrfs" ]; then packages+=( "btrfs-progs" ); fi
 
@@ -183,28 +197,48 @@ uefi_gpt_ext4_grub_install() {
     parted -s "$DISK" mkpart "$EFI_LABEL" fat32 0% "${EFI_SIZE}${UNIT}"
     parted "$DISK" set 1 esp on
     parted -s "$DISK" mkpart "$ROOT_LABEL" "$FILESYSTEM" "${EFI_SIZE}${UNIT}" "$((EFI_SIZE + ROOT_SIZE))${UNIT}"
-    parted -s "$DISK" mkpart "$BACKUP_LABEL" "$FILESYSTEM" "$((EFI_SIZE + ROOT_SIZE))${UNIT}" "$((EFI_SIZE + ROOT_SIZE + BACKUP_SIZE))${UNIT}"
-    parted -s "$DISK" mkpart "$HOME_LABEL" "$FILESYSTEM" "$((EFI_SIZE + ROOT_SIZE + BACKUP_SIZE))${UNIT}" 100%
+    if [ $CREATE_PARTITION_FOR_BACKUP -eq "yes" ]; then
+        parted -s "$DISK" mkpart "$BACKUP_LABEL" "$FILESYSTEM" "$((EFI_SIZE + ROOT_SIZE))${UNIT}" "$((EFI_SIZE + ROOT_SIZE + BACKUP_SIZE))${UNIT}"
+        parted -s "$DISK" mkpart "$HOME_LABEL" "$FILESYSTEM" "$((EFI_SIZE + ROOT_SIZE + BACKUP_SIZE))${UNIT}" 100%
+    else
+        parted -s "$DISK" mkpart "$HOME_LABEL" "$FILESYSTEM" "$((EFI_SIZE + ROOT_SIZE))${UNIT}" 100%
+    fi
 
     # Partitions Name
     # '/dev/nvme0n1p1'  p1 not 1
     if [[ "$DISK" == *nvme* ]]; then
-        EFI="${DISK}p1"; ROOT="${DISK}p2"; BACKUP="${DISK}p3"; HOME="${DISK}p4"
+        EFI="${DISK}p1"; ROOT="${DISK}p2";
+        if [ $CREATE_PARTITION_FOR_BACKUP -eq "yes" ]; then
+            BACKUP="${DISK}p3"; HOME="${DISK}p4"
+        else
+            HOME="${DISK}p3"
+        fi
     else
-        EFI="${DISK}1";  ROOT="${DISK}2";  BACKUP="${DISK}3";  HOME="${DISK}4"
+        EFI="${DISK}1";  ROOT="${DISK}2"
+        if [ $CREATE_PARTITION_FOR_BACKUP -eq "yes" ]; then
+            BACKUP="${DISK}3"; HOME="${DISK}4"
+        else
+            HOME="${DISK}3"
+        fi
     fi
 
     # Format Partitions
     mkfs.fat -F32 "$EFI"
     mkfs.ext4 -F "$ROOT"
-    mkfs.ext4 -F "$BACKUP"
+    if [ $CREATE_PARTITION_FOR_BACKUP -eq "yes" ]; then
+        mkfs.ext4 -F "$BACKUP"
+    fi
     mkfs.ext4 -F "$HOME"
     # Mount To Root
     mount "$ROOT" /mnt
     mkdir -p /mnt/{boot/efi,home,backup}
     mount "$EFI" /mnt/boot/efi
     mount "$HOME" /mnt/home
-    mount "$BACKUP" /mnt/backup
+    if [ $CREATE_PARTITION_FOR_BACKUP -eq "yes" ]; then
+        mount "$BACKUP" /mnt/backup
+    else
+        mkdir /mnt/backup
+    fi
 
     # Setup Swapfile
     fallocate -l "$SWAP_SIZE" /mnt"$SWAP_FILE"
@@ -225,7 +259,15 @@ uefi_gpt_ext4_grub_install() {
     genfstab -U /mnt >> /mnt/etc/fstab
     echo -e "$OK Generate fstab Partition Table."
 
+    # Grub
+    # arch-chroot /mnt grub-install  # Auto?
+    arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="${GRUB_OPT_NAME}"
+    arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
+    echo -e "$OK Setup grub."
+
+    ################################################################################
     # Setup System
+    ################################################################################
     ## Enable NetworkManager
     arch-chroot /mnt systemctl enable NetworkManager
     echo -e "$OK Enable NetworkManager"
@@ -240,19 +282,21 @@ uefi_gpt_ext4_grub_install() {
     
     ## Language
     arch-chroot /mnt sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
-    arch-chroot /mnt sed -i "s/#$LOCALE_1 UTF-8/$LOCALE_1 UTF-8/" /etc/locale.gen
-    arch-chroot /mnt sed -i "s/#$LOCALE_2 UTF-8/$LOCALE_2 UTF-8/" /etc/locale.gen
+    arch-chroot /mnt sed -i "s/#${LOCALE_1} UTF-8/${LOCALE_1} UTF-8/" /etc/locale.gen
+    arch-chroot /mnt sed -i "s/#${LOCALE_2} UTF-8/${LOCALE_2} UTF-8/" /etc/locale.gen
     arch-chroot /mnt locale-gen
-    arch-chroot /mnt sh -c "echo 'LANG=en_US.UTF-8' > /etc/locale.conf"
+    arch-chroot /mnt sh -c "printf 'LANG=%s\nLC_MESSAGES=en_US.UTF-8\n' '${LOCALE_1}' > /etc/locale.conf"
     echo -e "$OK Setup system language."
 
     ## Hostname
     arch-chroot /mnt sh -c "echo $HOSTNAME > /etc/hostname"
     echo -e "$OK Setup hostname."
 
-    ## Enable pacman color
+    ## pacman config
     arch-chroot /mnt sed -i 's/#Color/Color/' /etc/pacman.conf
     echo -e "$OK Enable pacman color."
+    arch-chroot /mnt sed -i '/^#\[\multilib\]$/{s/^#//;n;/^#Include[[:space:]]*=/s/^#//;}' /etc/pacman.conf
+    echo -e "$OK Enable pacman multilib for 32 bit packages."
 
     ## Passwd root
     while true; do
@@ -262,7 +306,7 @@ uefi_gpt_ext4_grub_install() {
             break
         fi
     done
-    ## Create first user
+    ## Create first user and add to group wheel
     if [ "$USERNAME" != "" ]; then
         arch-chroot /mnt useradd -m -G wheel -s $USERSHELL $USERNAME
         echo -e "$OK Setup $USERNAME (group wheel)."
@@ -279,20 +323,39 @@ uefi_gpt_ext4_grub_install() {
     arch-chroot /mnt sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
     echo -e "$OK Setup group wheel sudoers."
 
-    ## Grub
-    # arch-chroot /mnt grub-install  # Auto?
-    arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ArchLinux
-    arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
-    echo -e "$OK Setup grub."
+    ################################################################################
+    # myconfig
+    ################################################################################
+    if [[ -n "$0" && "$0" != "-bash" ]]; then   # /dir/filename
+        script_path=$(realpath "$0")
+    else
+        script_path=$(realpath "${BASH_SOURCE[0]}")
+    fi
+    if [[ "$script_path" == */* ]]; then        # /dir
+        script_path="${script_path%/*}"
+    fi
+    # myconfig
+    if [[ -d "$script_path/myconfig" && -d "/mnt/home/$USERNAME/" ]]; then
+        cp -r $script_path/myconfig /mnt/home/$USERNAME/
+        arch-chroot /mnt chown -R $USERNAME:$USERNAME "/home/$USERNAME/myconfig"
+    fi
+    echo -e "$OK Copy myconfig finsh!"
 
+    ################################################################################
     # Rescue System (Minimal Arch)
+    ################################################################################
     mkdir -p /mnt"${RESCUE_DIR}"
     AVAIL_MB=$(df -BM /mnt | awk 'NR==2 {print $4}' | tr -d 'M')
     if [ "$AVAIL_MB" -lt 1500 ]; then
         echo -e "$WARN Avail space less 1.5G (${AVAIL_MB}MB), skip download ISO。"
     else
-        echo -e "$INFO Downloading arch linux iso to ${RESCUE_DIR}..."
-        curl -L -o /mnt"${RESCUE_DIR}/${ISO_SAVE_NAME}" "$ISO_DOWNLOAD_URL"
+        if [ -f "/root/${ISO_FILENAME}" ]; then
+            cp "/root/${ISO_FILENAME}" "/mnt${RESCUE_DIR}/${ISO_FILENAME}"
+        else
+            echo -e "$INFO Downloading arch linux iso to ${RESCUE_DIR}..."
+            curl -fL -C - --retry 3 -# -o "/mnt${RESCUE_DIR}/${ISO_FILENAME}" "${ISO_DOWNLOAD_URL}"
+        fi
+        echo -e "$INFO Setup arch linux iso to ${RESCUE_DIR}..."
     fi
 
     ROOT_UUID=$(blkid -s UUID -o value "/dev/disk/by-partlabel/${ROOT_LABEL}")
@@ -302,8 +365,9 @@ uefi_gpt_ext4_grub_install() {
         exit 1
     fi
 
+    # Rescue System (live)
 cat > /mnt/boot/grub/custom.cfg <<EOF
-menuentry "Arch Linux Rescue (ISO Loopback)" {
+menuentry "${GRUB_OPT_RESCUE_NAME}" {
     insmod part_gpt
     insmod ext2
     insmod loopback
@@ -311,12 +375,12 @@ menuentry "Arch Linux Rescue (ISO Loopback)" {
 
     search --no-floppy --fs-uuid --set=root "${ROOT_UUID}"
 
-    loopback loop "${RESCUE_DIR}/${ISO_SAVE_NAME}"
+    loopback loop "${RESCUE_DIR}/${ISO_FILENAME}"
 
     linux (loop)/arch/boot/x86_64/vmlinuz-linux \
         archisobasedir=arch \
         img_dev="/dev/disk/by-partuuid/${ROOT_PARTUUID}" \
-        img_loop="${RESCUE_DIR}/${ISO_SAVE_NAME}" \
+        img_loop="${RESCUE_DIR}/${ISO_FILENAME}" \
         cow_spacesize=4G \
         earlymodules=overlay \
         quiet
@@ -326,44 +390,43 @@ menuentry "Arch Linux Rescue (ISO Loopback)" {
 EOF
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 
-    # Backup Script
-cat > /mnt/usr/local/bin/snapshot-backup.sh <<EOF
-#!/bin/bash
-SNAP_DIR="${SNAPSHOT_BASE}/\$(date +%Y%m%d-%H%M)"
-EXCLUDE="/backup/exclude.list"
-
-mkdir -p "\$SNAP_DIR"
-
-cat > "$EXCLUDE" <<EXCL
+    cat > "/mnt${EXCLUDE}" <<EOF
 /home/*
 /var/cache/pacman/pkg/*
 /tmp/*
-/proc/*
+/proc/
 /sys/*
 /dev/*
 /run/*
 /mnt/*
 /media/*
-/backup/*
+/backup/
 ${RESCUE_DIR}/
 ${SWAP_FILE}
 /home/*/.local/share/Steam
 /home/*/Games
 /home/*/.steam
-EXCL
+EOF
 
-rsync -aAXH --delete --exclude-from="\$EXCLUDE" / "\$SNAP_DIR/"
-echo "$INFO Snapshot save as '\$SNAP_DIR'"
+    # Backup Script
+    cat > /mnt${SNAPSHOT_BACKUP} <<EOF
+#!/bin/bash
+SNAP_DIR="${SNAPSHOT_BASE}/\$(date +%Y%m%d-%H%M)"
+
+mkdir -p "\$SNAP_DIR"
+
+echo "$INFO Snapshot '\${SNAP_DIR}' saveing..."
+rsync -aAXH --info=progress2 --delete --exclude-from="\$EXCLUDE" / "\$SNAP_DIR/"
+echo "$OK Snapshot save as '\$SNAP_DIR'"
 EOF
     chmod +x /mnt/usr/local/bin/snapshot-backup.sh
 
     # Restore Script
-cat > /mnt/usr/local/bin/restore-snapshot.sh <<EOF
+    cat > /mnt${SNAPSHOT_RESTORE} <<EOF
 #!/bin/bash
 if [ \$# -eq 0 ]; then
     echo "${WARN} This script must run at live/rescue system!"
     echo "Usage: \$0 <snapshot_name>"
-    ls -1 "${SNAPSHOT_BASE}/"
     exit 1
 fi
 
@@ -374,15 +437,19 @@ if [ "\$RESTORE_DISK" == "n" -o "\$RESTORE_DISK" == "N" ]; then exit 0; fi
 
 mount /dev/disk/by-partlabel/${ROOT_LABEL} /mnt 2>/dev/null || mount ${ROOT} /mnt
 mkdir -p /mnt/backup
-mount /dev/disk/by-partlabel/${BACKUP_LABEL} /mnt/backup 2>/dev/null || mount ${BACKUP} /mnt/backup
 
-rsync -aAXH --delete --exclude-from=/backup/exclude.list "${SNAPSHOT_BASE}/\$1/" /mnt/
+if [ ${CREATE_PARTITION_FOR_BACKUP} -eq "yes" ]; then
+    mount /dev/disk/by-partlabel/${BACKUP_LABEL} /mnt/backup 2>/dev/null || mount ${BACKUP} /mnt/backup
+fi
+
+rsync -aAXH --info=progress2 --delete --exclude-from=/mnt/backup/exclude.list "/mnt${SNAPSHOT_BASE}/\$1/" /mnt/
 echo "$OK Restore finish, please reboot machine."
 EOF
     chmod +x /mnt/usr/local/bin/restore-snapshot.sh
 
     ## debug
     cp "/root/${LOGFILE}" "/mnt/backup/${LOGFILE}"
+    # debug info
     echo -e "$INFO cat /mnt/etc/fstab"
     cat /mnt/etc/fstab
     echo -e "$INFO blkid"
@@ -392,17 +459,19 @@ EOF
     echo -e "$INFO ls -FA /mnt/boot/efi"
     ls -FA /mnt/boot/efi
 
-    # Reboot now
-    printf "$INPUT Reboot now? [Y/n] "
-    read -re reboot_now
-    reboot_now=${reboot_now:-y}
-    if [ "$reboot_now" == "y" -o "$reboot_now" == "Y" ]; then
-        umount -R /mnt
-        reboot
-    fi
 }
 
+# Timer
 start_time=$(date +%s)
 uefi_gpt_ext4_grub_install
 end_time=$(date +%s)
 echo -e "$INFO Installation completed in $((end_time - start_time)) seconds"
+
+# Reboot now
+printf "$INPUT Reboot now? [Y/n] "
+read -re reboot_now
+reboot_now=${reboot_now:-y}
+if [ "$reboot_now" == "y" -o "$reboot_now" == "Y" ]; then
+    umount -R /mnt
+    reboot
+fi
