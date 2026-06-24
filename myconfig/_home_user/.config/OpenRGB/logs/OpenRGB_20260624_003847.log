@@ -1,0 +1,55 @@
+    OpenRGB v0.9+ (1.0rc2)
+    Commit:  from 
+    Launched: 20260624_003847
+====================================================================================================
+
+2     |Info:    [ResourceManager] Saving detector settings
+3     |Info:    [ResourceManager] Initializing HID interfaces: Success
+3     |Info:    ------------------------------------------------------
+3     |Info:    |               Start device detection               |
+3     |Info:    ------------------------------------------------------
+7     |Info:    ------------------------------------------------------
+7     |Info:    |             Detecting I2C interfaces               |
+7     |Info:    ------------------------------------------------------
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-3 Device 1002:7550 Subsystem: 1ED3:7891
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-10 Device 1002:13C0 Subsystem: 1462:7E61
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-1 Device 1002:7550 Subsystem: 1ED3:7891
+7     |Warning: [i2c_smbus_linux] Failed to read i2c device PCI device ID
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-8 Device 0000:0000 Subsystem: 0000:0000
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-6 Device 1002:7550 Subsystem: 1ED3:7891
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-13 Device 1022:790B Subsystem: 1462:7E61
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-4 Device 1002:7550 Subsystem: 1ED3:7891
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-11 Device 1022:790B Subsystem: 1462:7E61
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-2 Device 1002:7550 Subsystem: 1ED3:7891
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-0 Device 0000:0000 Subsystem: 0000:0000
+7     |Warning: [i2c_smbus_linux] Failed to read i2c device PCI device ID
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-9 Device 0000:0000 Subsystem: 0000:0000
+7     |Warning: [i2c_smbus_linux] Failed to read i2c device PCI device ID
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-7 Device 0000:0000 Subsystem: 0000:0000
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-5 Device 1002:7550 Subsystem: 1ED3:7891
+7     |Info:    [ResourceManager] Registering I2C interface: /dev/i2c-12 Device 1022:790B Subsystem: 1462:7E61
+7     |Info:    ------------------------------------------------------
+7     |Info:    |               Detecting I2C devices                |
+7     |Info:    ------------------------------------------------------
+847   |Info:    ------------------------------------------------------
+847   |Info:    |            Detecting I2C DIMM modules              |
+847   |Info:    ------------------------------------------------------
+1895  |Info:    [ResourceManager] Detected occupied slot 2, bus 7, type DDR5
+1940  |Info:    ------------------------------------------------------
+1940  |Info:    |               Detecting I2C PCI devices            |
+1940  |Info:    ------------------------------------------------------
+1940  |Info:    ------------------------------------------------------
+1940  |Info:    |               Detecting HID devices                |
+1940  |Info:    ------------------------------------------------------
+1991  |Info:    No matching driver found for MSI MAG B850M MORTAR WIFI (MS-7E61), packet length = 0
+1991  |Info:    ------------------------------------------------------
+1991  |Info:    |            Detecting libusb HID devices            |
+1991  |Info:    ------------------------------------------------------
+2003  |Info:    ------------------------------------------------------
+2003  |Info:    |              Detecting other devices               |
+2003  |Info:    ------------------------------------------------------
+2010  |Info:    [ResourceManager] Calling Post-detection callbacks
+2010  |Info:    ------------------------------------------------------
+2010  |Info:    |                Detection completed                 |
+2010  |Info:    ------------------------------------------------------
+2010  |Dialog:  <h2>Some internal devices may not be detected:</h2><p>One or more I2C or SMBus interfaces failed to initialize.</p><p><b>RGB DRAM modules, some motherboards' onboard RGB lighting, and RGB Graphics Cards, will not be available in OpenRGB</b> without I2C or SMBus.</p><h4>How to fix this:</h4><p>On Linux, this is usually because the i2c-dev module is not loaded.</p><p>You must load the i2c-dev module along with the correct i2c driver for your motherboard. This is usually i2c-piix4 for AMD systems and i2c-i801 for Intel systems.</p><p>See <a href='https://help.openrgb.org/'>help.openrgb.org</a> for additional troubleshooting steps if you keep seeing this message.<br></p><h3>If you are not using internal RGB on a desktop this message is not important to you.</h3>

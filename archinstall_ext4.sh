@@ -3,6 +3,7 @@
 # Configuration
 HOSTNAME="arch"
 TIMEZONE="Asia/Shanghai"
+DEFAULT_LOCALE="en_US.UTF-8"
 LOCALE_1="zh_CN.UTF-8"
 LOCALE_2="zh_TW.UTF-8"
 # "" disable Create first user
@@ -52,7 +53,8 @@ SNAPSHOT_BACKUP="/usr/local/bin/snapshot-backup.sh"
 SNAPSHOT_RESTORE="/usr/local/bin/restore-snapshot.sh"
 
 SWAP_FILE="/swapfile"
-SWAP_SIZE="4G"          # 16G RAM, 4G for now
+# 16G RAM, need 16G swap for "sudo systemctl hibernate", if not used this func, default 4G should enough.
+SWAP_SIZE="4G"
 
 packages=(
     "base"
@@ -66,7 +68,9 @@ packages=(
     "bc"                    # for cpu float math
     # "sudo"                  # arch install by default
     "fastfetch"             # System Info
+    "bash-completion"       # git 等子命令bash补全功能包
 
+    "ufw"                   # firewall
     "networkmanager"
     # "iwd"                 #"networkmanager" replace this
     # "dhcpcd"              #"networkmanager" replace this
@@ -90,8 +94,12 @@ packages=(
     "tmux"
     "curl"
     "git"
-    "tar"
-    "gzip"
+    # tar -z (gzip), -j (bzip2), -J (xz)
+    "tar"                   # ".tar" ".tar.gz" ".tar.bz2" ".tar.xz", ".tar" default only package the project no zip func, 'tar' command
+    "gzip"                  # ".gz" file, for 'tar' support, zip the project, 'gzip', 'gunzip', 'zcat' command
+    "zip"                   # ".zip" file, 'zip' and 'unzip' command
+    "bzip2"                 # ".bz2" file, 'bzip2', 'bunzip2' command
+    "xz"                    # ".xz" file, 'xz', 'unxz' command
     "rsync"                 # for ext4 snapshot backup system
     "openssh"               # remote link
     "fd"                    # modern search tool, replace 'grep/find' (neovim telescope plugin depend)
@@ -281,11 +289,11 @@ uefi_gpt_ext4_grub_install() {
     echo -e "$OK Setup timezone."
     
     ## Language
-    arch-chroot /mnt sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+    arch-chroot /mnt sed -i "s/#${DEFAULT_LOCALE} UTF-8/${DEFAULT_LOCALE} UTF-8/" /etc/locale.gen
     arch-chroot /mnt sed -i "s/#${LOCALE_1} UTF-8/${LOCALE_1} UTF-8/" /etc/locale.gen
     arch-chroot /mnt sed -i "s/#${LOCALE_2} UTF-8/${LOCALE_2} UTF-8/" /etc/locale.gen
     arch-chroot /mnt locale-gen
-    arch-chroot /mnt sh -c "printf 'LANG=%s\nLC_MESSAGES=en_US.UTF-8\n' '${LOCALE_1}' > /etc/locale.conf"
+    # arch-chroot /mnt sh -c "printf 'LANG=%s\nLC_MESSAGES=en_US.UTF-8\n' '${DEFAULT_LOCALE}' > /etc/locale.conf"
     echo -e "$OK Setup system language."
 
     ## Hostname

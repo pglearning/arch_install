@@ -1,0 +1,6 @@
+[open]
+rules = [
+    { mime = "text/*", use = ["edit", "reveal"] },
+    { mime = "image/*", use = ["open", "reveal"] },
+    { mime = "{audio,video}/*", use = ["play", "reveal"] }
+]

@@ -17,45 +17,54 @@ ERROR="[\e[31m ERROR \e[0m]"
 # aru_packages=(
 #     "noctalia"
 #     "noctalia-shell"
+#     "linuxqq-nt-bwrap"
 #     "catppuccin-sddm-theme"
 # )
 
 packages=(
-    "ttf-meslo-nerd"
-    "adobe-source-han-serif-cn-fonts"
-    "adobe-source-han-sans-cn-fonts"
+    "ttf-meslo-nerd"                    # Mono font
+    "adobe-source-han-serif-cn-fonts"   # Serif font
+    "adobe-source-han-sans-cn-fonts"    # Sans font
+    "noto-fonts-emoji"                  # emoji font
 
-    "niri"              # wayland window manager
-    "fuzzel"            # wayland launcher
-    "alacritty"         # Terminal emulator
-    "sddm"              # login
-    "wl-clipboard"      # like 'xclip' put data in clipboard
+    "wayland"
+    # "xorg-xwayland"               # some need xorg server support
+    "xwayland-satellite"            # for steam
+    "niri"                          # wayland window manager
+    "fuzzel"                        # wayland launcher
+    "alacritty"                     # Terminal emulator
+    "sddm"                          # login
+    "wl-clipboard"                  # like 'xclip' put data in clipboard
 
     "fcitx5"
     "fcitx5-chinese-addons"
     "fcitx5-configtool"
     "ffmpeg"
-    "mesa"              # OpenGL
-    "vulkan-radeon"     # amd device
+    "mesa"                          # OpenGL
+    "vulkan-radeon"                 # amd device
     # "vulkan-intel"      # intel device
     # "vulkan-nvidia"     # nvidia device
-    "yt-dlp"            # youtube video downloader
-    "transmission-cli"  # for download *.torrent files "transmission-cli archlinux-2026.06.01-x86_64.iso.torrent"
-    "chromium"          # google chrome web browser
-    "obs-studio"        # record screen
-    "mpv"               # video player, same as be music player
-    # "ncmpcpp"           # music player, need mpd
-    # "rmpc"              # music player, need mpd
-    # "mpd"               # music player server
+    "yt-dlp"                        # youtube video downloader
+    "transmission-cli"              # for download *.torrent files "transmission-cli archlinux-2026.06.01-x86_64.iso.torrent"
+    "chromium"                      # google chrome web browser
+    "libreoffice-still"             # fresh office word, excel, etc.
+    "libreoffice-still-zh-cn"       # fresh office word, excel, etc.
+    # "libreoffice-fresh"             # fresh office word, excel, etc.
+    # "libreoffice-fresh-zh-cn"       # fresh office word, excel, etc.
+    "obs-studio"                    # record screen
+    "mpv"                           # video player, same as be music player
+    # "ncmpcpp"                       # music player, need mpd
+    # "rmpc"                          # music player, need mpd
+    # "mpd"                           # music player server
 
-    "pipewire-audio"    # Bluetooth audio support, need 'bluez' package
-    "pipewire-alsa"     # alsa support
+    "pipewire-audio"                # Bluetooth audio support, need 'bluez' package
+    "pipewire-alsa"                 # alsa support
     "pipewire-jack"
-    "realtime-privileges"   # Low latency real-time, Music production, game explosion-proof sound
-    "easyeffects"           # Earphone tuning, microphone noise reduction
+    "realtime-privileges"           # Low latency real-time, Music production, game explosion-proof sound
+    "easyeffects"                   # Earphone tuning, microphone noise reduction
 
-    "v2ray"            # Tun porxy
-    # "clang"
+    "v2ray"                         # Tun porxy
+    "clang"
 )
 
 sudo pacman -Syu

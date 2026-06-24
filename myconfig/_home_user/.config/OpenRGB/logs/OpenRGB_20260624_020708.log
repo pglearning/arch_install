@@ -1,0 +1,56 @@
+    OpenRGB v0.9+ (git1994)
+    Commit: 39343c3e9ed2781763618fca4f6156c99246a0cd from 2026-06-22 20:49:53 -0500
+    Launched: 20260624_020708
+====================================================================================================
+
+52    |Info:    [ResourceManager] Initializing HID interfaces: Success
+52    |Info:    ------------------------------------------------------
+52    |Info:    |               Start device detection               |
+52    |Info:    ------------------------------------------------------
+56    |Info:    ------------------------------------------------------
+56    |Info:    |             Detecting I2C interfaces               |
+56    |Info:    ------------------------------------------------------
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM i2c hw bus 0 (/dev/i2c-3) Device 1002:7550 Subsystem: 1ED3:7891
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM i2c hw bus 0 (/dev/i2c-10) Device 1002:13C0 Subsystem: 1462:7E61
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU SMU 0 (/dev/i2c-1) Device 1002:7550 Subsystem: 1ED3:7891
+57    |Info:    [i2c_smbus_linux] Failed to read i2c device PCI device ID
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM aux hw bus 1 (/dev/i2c-8) Device 0000:0000 Subsystem: 0000:0000
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM i2c hw bus 3 (/dev/i2c-6) Device 1002:7550 Subsystem: 1ED3:7891
+57    |Info:    [ResourceManager] Registering I2C interface: SMBus PIIX4 adapter port 1 at 0b20 (/dev/i2c-13) Device 1022:790B Subsystem: 1462:7E61
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM i2c hw bus 1 (/dev/i2c-4) Device 1002:7550 Subsystem: 1ED3:7891
+57    |Info:    [ResourceManager] Registering I2C interface: SMBus PIIX4 adapter port 0 at 0b00 (/dev/i2c-11) Device 1022:790B Subsystem: 1462:7E61
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU SMU 1 (/dev/i2c-2) Device 1002:7550 Subsystem: 1ED3:7891
+57    |Info:    [ResourceManager] Registering I2C interface: Synopsys DesignWare I2C adapter (/dev/i2c-0) Device 0000:0000 Subsystem: 0000:0000
+57    |Info:    [i2c_smbus_linux] Failed to read i2c device PCI device ID
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM aux hw bus 2 (/dev/i2c-9) Device 0000:0000 Subsystem: 0000:0000
+57    |Info:    [i2c_smbus_linux] Failed to read i2c device PCI device ID
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM aux hw bus 0 (/dev/i2c-7) Device 0000:0000 Subsystem: 0000:0000
+57    |Info:    [ResourceManager] Registering I2C interface: AMDGPU DM i2c hw bus 2 (/dev/i2c-5) Device 1002:7550 Subsystem: 1ED3:7891
+57    |Info:    [ResourceManager] Registering I2C interface: SMBus PIIX4 adapter port 2 at 0b00 (/dev/i2c-12) Device 1022:790B Subsystem: 1462:7E61
+57    |Info:    ------------------------------------------------------
+57    |Info:    |               Detecting I2C devices                |
+57    |Info:    ------------------------------------------------------
+745   |Info:    ------------------------------------------------------
+745   |Info:    |            Detecting I2C DIMM modules              |
+745   |Info:    ------------------------------------------------------
+808   |Info:    [ResourceManager] Detected occupied slot 2, bus 7, type DDR5
+898   |Info:    ------------------------------------------------------
+898   |Info:    |               Detecting I2C PCI devices            |
+898   |Info:    ------------------------------------------------------
+898   |Info:    ------------------------------------------------------
+898   |Info:    |               Detecting HID devices                |
+898   |Info:    ------------------------------------------------------
+953   |Info:    Read 290 bytes from read enable packet, subsequent get reports should work
+964   |Info:    Sending configuration resulted in 290
+
+964   |Info:    [MSI MYSTIC LIGHT] Registering RGB controller
+964   |Info:    ------------------------------------------------------
+964   |Info:    |            Detecting libusb HID devices            |
+964   |Info:    ------------------------------------------------------
+971   |Info:    ------------------------------------------------------
+971   |Info:    |              Detecting other devices               |
+971   |Info:    ------------------------------------------------------
+979   |Info:    [ResourceManager] Calling Post-detection callbacks
+979   |Info:    ------------------------------------------------------
+979   |Info:    |                Detection completed                 |
+979   |Info:    ------------------------------------------------------
