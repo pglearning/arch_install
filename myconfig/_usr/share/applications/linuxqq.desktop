@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=QQ
+Exec=env DESKTOPINTEGRATION=false /usr/bin/linuxqq --no-sandbox --ozone-platform-hint=auto %U
+Terminal=false
+Type=Application
+Icon=/usr/share/icons/linuxqq.png
+StartupWMClass=QQ
+X-AppImage-Version=49738
+Categories=Network;
+Comment=QQ

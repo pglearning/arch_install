@@ -2,5 +2,6 @@
 rules = [
     { mime = "text/*", use = ["edit", "reveal"] },
     { mime = "image/*", use = ["open", "reveal"] },
-    { mime = "{audio,video}/*", use = ["play", "reveal"] }
+    { mime = "{audio,video}/*", use = ["play", "reveal"] },
+    { mime = "*", use = ["edit", "reveal"] }
 ]

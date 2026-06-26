@@ -40,6 +40,7 @@ packages=(
     "fcitx5-chinese-addons"
     "fcitx5-configtool"
     "ffmpeg"
+    "rocm-smi-lib"                  # for btop show GPU info
     "mesa"                          # OpenGL
     "vulkan-radeon"                 # amd device
     # "vulkan-intel"      # intel device
@@ -53,6 +54,7 @@ packages=(
     # "libreoffice-fresh-zh-cn"       # fresh office word, excel, etc.
     "obs-studio"                    # record screen
     "mpv"                           # video player, same as be music player
+    "mpv-mpris"                     # MPRIS support, noctalia needed.
     # "ncmpcpp"                       # music player, need mpd
     # "rmpc"                          # music player, need mpd
     # "mpd"                           # music player server
@@ -65,6 +67,12 @@ packages=(
 
     "v2ray"                         # Tun porxy
     "clang"
+
+    # Game
+    "steam"
+    "lib32-mangohud"
+    "mangohud"                      # Game hud for hardware Performance Monitor. steam start_opt add "mangohud %command%"
+    "gamescope"                     # Custom game window output like "gamescope -w 2560 -h 1440 -r 144 -- mangohud %command%"
 )
 
 sudo pacman -Syu
