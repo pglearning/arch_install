@@ -84,7 +84,9 @@ FixNamespaceComments: true
 # Indentation
 IndentCaseLabels: false
 IndentGotoLabels: true
-IndentPPDirectives: BeforeHash
+# IndentPPDirectives: BeforeHash
+# IndentPPDirectives: AfterHash
+IndentPPDirectives: None
 IndentWidth: 4
 IndentWrappedFunctionNames: false
 

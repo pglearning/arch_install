@@ -114,6 +114,7 @@ export LS_COLORS="${LS_COLORS}ow=01;37;42:"
 alias ls='ls -Fh --color=always'
 alias ll='ls -Fls'
 alias la='ls -FAh'
+alias lla='ls -FAhl'
 alias l.='ll -d .*'
 
 # 显示cd 前的路径
@@ -164,6 +165,9 @@ alias rm='rm -i --preserve-root'
 
 # 删除文件夹和所有文件
 alias rmd='\rm --recursive --force --verbose'
+
+# du
+alias du='du -sh'
 
 # tar
 alias mkbz2='tar -cvjf'

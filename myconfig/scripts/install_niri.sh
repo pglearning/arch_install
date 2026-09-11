@@ -17,8 +17,8 @@ ERROR="[\e[31m ERROR \e[0m]"
 # aru_packages=(
 #     "noctalia"
 #     "noctalia-shell"
-#     "linuxqq-nt-bwrap"
-#     "catppuccin-sddm-theme"
+#     "linuxqq-appimage"
+#     "wechat-appimage"
 # )
 
 packages=(
@@ -29,10 +29,12 @@ packages=(
 
     "wayland"
     # "xorg-xwayland"               # some need xorg server support
-    "xwayland-satellite"            # for steam
     "niri"                          # wayland window manager
     "fuzzel"                        # wayland launcher
-    "alacritty"                     # Terminal emulator
+    # "alacritty"                     # Terminal emulator
+    "foot"                          # foot can use sixel show fastfetch png logo
+    "chafa"                         # for trans png to sixel
+    "fastfetch"                     # system info
     "sddm"                          # login
     "wl-clipboard"                  # like 'xclip' put data in clipboard
 
@@ -47,17 +49,12 @@ packages=(
     # "vulkan-nvidia"     # nvidia device
     "yt-dlp"                        # youtube video downloader
     "transmission-cli"              # for download *.torrent files "transmission-cli archlinux-2026.06.01-x86_64.iso.torrent"
-    "chromium"                      # google chrome web browser
-    "libreoffice-still"             # fresh office word, excel, etc.
-    "libreoffice-still-zh-cn"       # fresh office word, excel, etc.
-    # "libreoffice-fresh"             # fresh office word, excel, etc.
-    # "libreoffice-fresh-zh-cn"       # fresh office word, excel, etc.
-    "obs-studio"                    # record screen
     "mpv"                           # video player, same as be music player
     "mpv-mpris"                     # MPRIS support, noctalia needed.
     # "ncmpcpp"                       # music player, need mpd
-    # "rmpc"                          # music player, need mpd
-    # "mpd"                           # music player server
+    "mpd"                           # music player server
+    "mpd-mpris"                     # for noctalia mpris media support
+    "rmpc"                          # music player, need mpd
 
     "pipewire-audio"                # Bluetooth audio support, need 'bluez' package
     "pipewire-alsa"                 # alsa support
@@ -67,8 +64,22 @@ packages=(
 
     "v2ray"                         # Tun porxy
     "clang"
+    "chromium"                      # google chrome web browser
+    "libreoffice-still"             # fresh office word, excel, etc.
+    "libreoffice-still-zh-cn"       # fresh office word, excel, etc.
+    # "libreoffice-fresh"             # fresh office word, excel, etc.
+    # "libreoffice-fresh-zh-cn"       # fresh office word, excel, etc.
+    "obs-studio"                    # record screen
+    "inkspace"                      # SVG image design
+    "gimp"                          # image viewer
+    "blender"                       # 3d module design
+    "kirta"                         # Painting
+    "godot"                         # game dev
+    "wine"                          # windows .exe program support
+    "bubblewrap"                    # sandbox
 
     # Game
+    "xwayland-satellite"            # for steam
     "steam"
     "lib32-mangohud"
     "mangohud"                      # Game hud for hardware Performance Monitor. steam start_opt add "mangohud %command%"

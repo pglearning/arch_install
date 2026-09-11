@@ -1,0 +1,11 @@
+2025-06-25T15:11:33 update: added /ts.mp3
+2025-06-25T15:14:02 exception: Failed to open "/home/usera/.config/mpd/state": No such file or directory
+2025-06-25T15:14:02 update: added /ts.mp3
+2025-06-25T16:00:57 exception: No such directory
+2025-06-25T16:05:35 player: played "ts.mp3"
+2025-06-25T16:07:22 player: played "ts.mp3"
+2026-06-27T14:07:50 exception: Failed to access /home/usera/music: No such file or directory
+2026-06-27T14:07:53 mixer: Failed to read mixer for "default detected output": no such mixer control: PCM
+2026-06-27T14:08:00 exception: Failed to open /home/usera/.mpd/playlists: No such file or directory
+2026-06-27T14:08:09 exception: Failed to open /home/usera/.mpd/playlists: No such file or directory
+2026-06-27T14:08:16 exception: Failed to open /home/usera/.mpd/playlists: No such file or directory
