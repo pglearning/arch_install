@@ -63,7 +63,7 @@ return {
         },
         words = { enabled = true },         -- LSP 引用高亮与跳转
 
-        -- 文件树用 oil.nvim, 保持关闭 --
+        -- 文件树用 yazi.nvim, 保持关闭 --
         explorer = { enabled = false },
 
         -- 默认就可用(无需 enabled)的模块: animate / bufdelete / git / gitbrowse / notify /

@@ -28,7 +28,7 @@ return {
         suppressed_dirs = { "~/", "~/Downloads", "~/Documents", "/", "/tmp", "/tmp/**" },
 
         -- 只有这些 filetype 的 buffer 打开时不保存 session(避免为启动面板/文件管理器建空 session)
-        bypass_save_filetypes = { "snacks_dashboard", "oil" },
+        bypass_save_filetypes = { "snacks_dashboard", "yazi" },
 
         -- 非默认: 30 天没访问过的 session 自动清理(设成 nil 可关闭)
         purge_after_minutes = 60 * 24 * 30,

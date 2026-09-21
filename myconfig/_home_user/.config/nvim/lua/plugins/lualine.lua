@@ -11,7 +11,7 @@ return {
             theme = "auto",             -- 自动跟随 colorscheme(会用到 catppuccin 的配色)
             globalstatus = false,       -- options.lua 里 laststatus=2, 每个窗口一条
             disabled_filetypes = {
-                statusline = { "snacks_dashboard" },    -- 启动面板不要状态栏
+                statusline = { "snacks_dashboard", "yazi" },   -- 启动面板/文件管理器不要状态栏
                 winbar = {},
             },
             refresh = { statusline = 1000 },
@@ -41,7 +41,8 @@ return {
             lualine_y = {},
             lualine_z = {},
         },
-        -- 可用扩展: oil / trouble / quickfix / lazy / mason / fugitive / neo-tree / fzf ...
-        extensions = { "oil", "trouble", "quickfix", "lazy", "mason" },
+        -- 官方可用扩展: trouble / quickfix / lazy / mason / fugitive / neo-tree / fzf ... (没有 yazi)
+        -- 可用扩展里没有 yazi, 所以这里不需要它
+        extensions = { "trouble", "quickfix", "lazy", "mason" },
     },
 }

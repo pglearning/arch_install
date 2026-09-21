@@ -11,6 +11,7 @@ return {
         -- 注意: 这里是整体替换官方默认列表, 所以要把官方那三个也写上
         disable_filetype = {
             "TelescopePrompt", "spectre_panel", "snacks_picker_input",   -- 官方默认
+            "yazi",                     -- yazi 文件管理器(终端 buffer)
             "xxd",                      -- hex 视图(<leader>uh)里不要自动补括号
             "DiffviewFiles", "DiffviewFileHistory",   -- diffview 的面板里也不要
         },

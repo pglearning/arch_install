@@ -208,7 +208,7 @@
 | `n <C-g>` | 显示文件名/光标位置 | 取消搜索高亮 | 文件信息可用 `:f` 查看 |
 | `n/v/o <C-j>` `<C-k>` | `<C-j>` 下移一行；`<C-k>` 无定义 | 上下移动 5 行 | visual 模式下改为移动选中代码块 |
 | `v >` `v <` | 缩进后退出可视 | 缩进并保持选中（`>gv`） | 更顺手，无副作用 |
-| `n -` | 上移到上一行首个非空字符 | 打开当前文件所在目录（oil.nvim） | 想用原生行为可以用 `k^` |
+| `n -` | 上移到上一行首个非空字符 | 打开当前文件所在目录（yazi.nvim） | 想用原生行为可以用 `k^` |
 | `i <CR>` | 换行 | 由 nvim-autopairs 接管 | 只有在括号/引号内换行时才多自动缩进闭合，普通换行不变 |
 | `n gd` | 跳到局部声明 | LSP 定义（**仅 LSP 挂载时 buffer-local**） | 无 LSP 时 `gd` 仍是原生行为；`gD` 未改动 |
 | `n gx`（仅 markdown） | 用系统程序打开路径/URL | `:Markview open`（打开 markdown 链接） | **只在 markdown buffer 里**，其它文件类型 `gx` 仍是原生 |
@@ -219,6 +219,6 @@
 `<C-W>d` `]q` `[q` `]Q` `[Q` `]l` `[l` `]a` `[a` `]t` `[t` `]b` `[b` `]<Space>` `[<Space>` `]n` `[n` `an` `in` `*` `#` `Y` `&` `<C-L>`，
 以及全部 `<C-w>` 窗口操作、`<C-o>`/`<C-i>`、`g;`/`g,`、`%`、`f/t/;/,` 等。
 
-> 另外注意：diffview / trouble / oil / markview 会在**自己的 buffer 里**设置 buffer-local 键位
+> 另外注意：diffview / trouble / yazi / markview 会在**自己的 buffer 里**设置 buffer-local 键位
 > （例如 diffview 窗口里 `<leader>e` 是"聚焦文件面板"、trouble 窗口里 `q` 是关闭），
 > 这些不会影响普通文件窗口，详见 `keymaps-plugins.md`。

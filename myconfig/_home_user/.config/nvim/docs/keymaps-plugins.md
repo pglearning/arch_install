@@ -11,7 +11,7 @@
 | `lua/keymaps/keymaps.lua` | 核心/Emacs 层、make、格式化、hex 视图（不依赖插件） |
 | `lua/config/lazy.lua` | `<localleader>l`、`<localleader>h` |
 | `lua/plugins/snacks.lua` | 查找/git/buffer/UI 的 leader 键位、`C-x C-f`、`C-x b`、`M-x`、`<F5>` |
-| `lua/plugins/oil.lua` | `-`、`<leader>e` |
+| `lua/plugins/yazi.lua` | `<leader>e`、`-`、`<leader>E` |
 | `lua/plugins/trouble.lua` | `<leader>x*` |
 | `lua/plugins/diffview.lua` | `<leader>g*`（diff/历史） |
 | `lua/plugins/markview.lua` | `<leader>M*` |
@@ -193,7 +193,7 @@ markdown 仍然自动折行（`wrap` + `linebreak`）。
 | `<leader>un` | 通知历史 |
 | `<leader>uz` / `<leader>uZ` | zen 模式 / zoom 模式 |
 
-> 配置要点：`explorer` 关闭（文件树用 oil）；`statuscolumn` 只保留折叠列（没有装 gitsigns，所以不显示 git 标记）；`indent` 已开启，但在 diffview/diff 缓冲区里会自动关闭（规避上游 "Invalid window id" 的问题）。
+> 配置要点：`explorer` 关闭（文件树用 yazi）；`statuscolumn` 只保留折叠列（没有装 gitsigns，所以不显示 git 标记）；`indent` 已开启，但在 diffview/diff 缓冲区里会自动关闭（规避上游 "Invalid window id" 的问题）。
 
 ---
 
@@ -303,32 +303,38 @@ diffview 窗口/面板内自带键位（官方默认，buffer-local）：
 | `g?` | 帮助面板 | `g!` | （历史面板）选项 |
 
 > 冲突解决（merge 时）：`<leader>co` / `ct` / `cb` 选 ours/theirs/base，`dx` 删除冲突区。
-> 注意：diffview 的窗口里 `<leader>e` 是"聚焦文件面板"（buffer-local），不会触发 oil。
+> 注意：diffview 的窗口里 `<leader>e` 是"聚焦文件面板"（buffer-local），不会触发 yazi。
 
 ---
 
-## 8. oil.nvim（文件管理器）
+## 8. yazi.nvim（文件管理器，基于 yazi TUI）
 
 | 键 | 作用 |
 |---|---|
-| `-` | 打开**当前文件所在目录**；在 oil 里再按 `-` 回到上级 |
-| `<leader>e` | 同上（文件管理器） |
+| `<leader>e` / `-` | 在**当前文件所在目录**打开 yazi（浮动窗口） |
+| `<leader>E` | 在 nvim 的**工作目录**打开 yazi |
 
-其它打开方式：`:Oil <dir>` 打开指定目录、`:Oil --float` 浮动打开、`:Oil --trash /` 查看回收站。
+命令：`:Yazi`（当前文件目录）、`:Yazi cwd`（工作目录）、`:Yazi toggle`（继续上次的会话）、`:Yazi logs`（排查问题）。
 
-oil buffer 内自带键位（官方默认，buffer-local）：
+yazi 窗口内的键位（插件默认，用 `yazi.nvim` 的 `keymaps` 配置，映射在 term 模式）：
 
 | 键 | 作用 | 键 | 作用 |
 |---|---|---|---|
-| `<CR>` | 打开文件/目录 | `<C-s>` / `<C-h>` / `<C-t>` | 垂直分屏 / 水平分屏 / 新标签页 |
-| `-` | 回到上级 | `_` | 打开当前工作目录 |
-| 反引号 | 把 cwd 切到该目录 | `g~` | 只切当前标签页的 cwd |
-| `<C-p>` | 预览 | `<C-l>` | 刷新 |
-| `<C-c>` | 关闭 | `g?` | 帮助 |
-| `g.` | 显示/隐藏隐藏文件 | `gs` | 切换排序 |
-| `gx` | 用外部程序打开 | `g\` | 回收站 |
+| `<f1>` | 显示全部键位 | `<CR>` | 用 nvim 打开选中的文件 |
+| `<C-v>` / `<C-x>` / `<C-t>` | 垂直分屏 / 水平分屏 / 新标签页打开 | `<C-o>` | 选一个窗口打开 |
+| `<C-s>` | 在 yazi 当前目录里 grep（用 **snacks.picker**，已配好） | `<C-q>` | 选中的文件送入 quickfix |
+| `<tab>` | 在已打开的 buffer 之间循环 | `<C-y>` | 复制选中文件的相对路径（需要 `realpath`） |
+| `<C-\>` | 把 nvim 的 cwd 切到 yazi 当前目录 | `q` | 退出 yazi（窗口随之关闭；`<Esc>` 是取消/退出可视模式） |
 
-**编辑方式**：像编辑普通文本一样改文件名、新建、删除、移动，然后 `:w` 才真正执行；`<CR>` 打开新/改名的文件时会提示先保存。
+yazi 自己的键位（在 yazi 里按 `~` 或 `<F1>` 看完整帮助；下面是按官方默认键位表核对过的）：
+`hjkl` 移动、`l`/`<CR>` 进入、`h` 返回上级、`y` 复制、`x` 剪切、`p` 粘贴、`d` 删除（进回收站）、`a` 新建、`r` 重命名、`v` 多选、`/` 查找、`s` 用 fd 搜文件、`z` 用 fzf 跳转、`Z` 用 zoxide 跳转、`.` 显示/隐藏隐藏文件、`q` 退出。
+
+**改名/移动/删除会同步到 nvim**：已打开的 buffer 会被同步重命名或关闭（用 snacks 的 bufdelete 保留窗口布局），LSP 也会收到文件操作通知。
+
+**两点配置说明**（都写在 `lua/plugins/yazi.lua` 里）：
+
+1. **grep 集成换成了 snacks**：插件默认值是 `telescope`，本方案没装 telescope，不改的话在 yazi 里按 `<C-s>` 会直接报错。现在是 `integrations.grep_in_directory = "snacks.picker"`。
+2. **`nvim .` 仍然用 netrw 打开目录**（`open_for_directories = false`，官方默认）。想让 yazi 接管目录 buffer，把它改成 `true` 并加 `vim.g.loaded_netrwPlugin = 1`。
 
 ---
 
@@ -385,7 +391,7 @@ oil buffer 内自带键位（官方默认，buffer-local）：
 | `:MasonInstall <pkg>` / `:MasonLog` | mason | 安装 / 查看日志 |
 | `:AutoSession save/restore/delete/toggle/purgeOrphaned/search` | auto-session | 会话操作 |
 | `:Trouble [mode] toggle` | trouble | 例如 `:Trouble diagnostics toggle`、`:Trouble lsp toggle win.position=right` |
-| `:Oil <dir>` / `:Oil --float` | oil | 打开目录 |
+| `:Yazi` / `:Yazi cwd` / `:Yazi toggle` | yazi.nvim | 打开文件管理器 / 工作目录 / 继续上次会话 |
 | `:Markview` / `:Markview splitToggle` / `:Markview traceExport` | markview | 渲染控制（traceExport 会在当前目录写 `markview_log.txt`） |
 | `:TSInstall` / `:TSUpdate` / `:TSLog` | nvim-treesitter | parser 管理（需要 `tree-sitter-cli`） |
 | `:TSContext toggle` | treesitter-context | 开关顶部上下文条 |
@@ -409,4 +415,4 @@ oil buffer 内自带键位（官方默认，buffer-local）：
 2. **不要占用原生默认键**，nvim 0.12 尤其注意：`g` 系（`grn gra grr gri grt grx gO gc gx`）、`]`/`[` 系（`]d [d ]q [q ]l [l ]a [a ]t [t ]b [b ]n [n ]<Space>`）、`<C-w>` 系、`K`、`Y`、`&`。
 
 本方案有意覆盖的原生键只有这几个（详见 `keymaps-native.md` §8）：
-`<C-x>`（变成前缀）、`<C-g>`、`n/v/o <C-j>` `<C-k>`、`v >` `<`、`-`（oil）、`i <CR>`（autopairs）、`<F5>`。
+`<C-x>`（变成前缀）、`<C-g>`、`n/v/o <C-j>` `<C-k>`、`v >` `<`、`-`（yazi）、`i <CR>`（autopairs）、`<F5>`。
