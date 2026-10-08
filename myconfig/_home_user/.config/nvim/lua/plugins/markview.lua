@@ -7,29 +7,35 @@ return {
         "nvim-tree/nvim-web-devicons",
     },
     keys = {
-        { "<leader>Mm", "<cmd>Markview toggle<CR>", desc = "Markdown: 开关渲染" },
-        { "<leader>Mh", "<cmd>Markview hybridToggle<CR>", desc = "Markdown: 混合模式(光标行显示源码)" },
-        { "<leader>Mp", "<cmd>Markview splitToggle<CR>", desc = "Markdown: 分屏预览" },
+        { "<leader>mm", "<cmd>Markview toggle<CR>", desc = "Markdown: 开关渲染" },
+        { "<leader>mh", "<cmd>Markview hybridToggle<CR>", desc = "Markdown: 混合模式(光标行显示源码)" },
+        { "<leader>mp", "<cmd>Markview splitToggle<CR>", desc = "Markdown: 分屏预览" },
     },
     opts = {
+        -- 默认不渲染 --
+        -- preview.enable 官方默认 true: 附加到新 buffer 时自动开启渲染。
+        -- 设为 false 后, 打开 markdown 看到的就是源码, 要按 <leader>mm 才渲染。
+        -- 大小写区别: 小写 toggle/enable/disable 只作用于当前 buffer,
+        --             大写 Toggle/Enable/Disable 是全局开关。
+        preview = {
+            enable = false,
+        },
+
         -- 官方顶层选项: markdown / markdown_inline / latex / typst / html / yaml / asciidoc /
-        -- comment / preview / experimental / icon_provider ... (默认全部开启渲染)
+        -- comment / preview / experimental / icon_provider ... (除 preview.enable 外都保持默认开启)
         --
         -- 注意: conceallevel 由 markview 自己按窗口管理(渲染时设 3, 关闭时设回 0),
         -- 所以不要在 options.lua 里给 markdown 另设 conceallevel
         --
-        -- 常用调整(官方默认值):
-        --   preview = {
+        -- preview 下其它可调项(官方默认值):
         --     hybrid_modes = { "i" },        -- 插入模式进入 hybrid
         --     icon_provider = "devicons",    -- 可选 "internal" | "devicons" | "mini"
         --     splitview_win = { ... },       -- :Markview splitToggle 的窗口
-        --   },
-        --   markdown = {
+        -- markdown 下常用:
         --     headings = { shift_width = 0 },              -- 标题图标缩进
         --     code_blocks = { style = "language", ... },   -- 代码块样式
         --     tables = { enable = true },
-        --   },
-        --   latex = { enable = true },       -- 数学公式(需要 latex 渲染工具, 没装则保持默认)
+        -- latex = { enable = true },       -- 数学公式(需要 latex 渲染工具, 没装则保持默认)
         -- 完整选项见 :help markview 或仓库 doc/markview.nvim.txt
         --
         -- 其它可用命令: :Markview Enable/Disable/Toggle(全局), :Markview enable/disable/toggle(当前 buffer),

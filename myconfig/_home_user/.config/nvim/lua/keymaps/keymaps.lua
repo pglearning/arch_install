@@ -68,7 +68,8 @@ keymap({ "n", "v", "o" }, "<A-,>", "<cmd>vertical resize -5<CR>", { desc = "Decr
 
 ---- Make (C/C++ 日常) ----
 -- :make 调用 makeprg(默认 make) 并把编译错误放进 quickfix, 用 <leader>xq 打开 trouble 查看
-keymap("n", "<leader>mm", "<cmd>make<CR>", { desc = "Run make, fill quickfix" })
+-- 注意: 小写 <leader>m 已经让给 markview(markdown), 所以 make 用大写 <leader>MM
+keymap("n", "<leader>MM", "<cmd>make<CR>", { desc = "Run make, fill quickfix" })
 
 ---- Format ----
 -- 有 LSP 格式化能力就交给 LSP(clangd/lua_ls/ruff/jsonls/yamlls/taplo ...),

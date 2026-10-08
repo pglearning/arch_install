@@ -14,7 +14,7 @@
 | `lua/plugins/yazi.lua` | `<leader>e`、`-`、`<leader>E` |
 | `lua/plugins/trouble.lua` | `<leader>x*` |
 | `lua/plugins/diffview.lua` | `<leader>g*`（diff/历史） |
-| `lua/plugins/markview.lua` | `<leader>M*` |
+| `lua/plugins/markview.lua` | `<leader>m*` |
 | `lua/plugins/auto-session.lua` | `<leader>s*` |
 | `lua/plugins/lsp.lua` | `<leader>li`、`gd`、`<leader>lc`（后两个 buffer-local） |
 | `lua/plugins/blink.lua` | 插入/命令行模式的补全键位 |
@@ -61,7 +61,7 @@
 | `<A-f>` / `<A-=>` | 当前窗口最大化 / 所有窗口等大 |
 | `<A-+>` / `<A-->` | 窗口高度 +3 / -3 |
 | `<A-.>` / `<A-,>` | 窗口宽度 +5 / -5 |
-| `<leader>mm` | `:make`（编译并把错误放进 quickfix，用 `<leader>xq` 查看） |
+| `<leader>MM` | `:make`（编译并把错误放进 quickfix，用 `<leader>xq` 查看） |
 | `<leader>lf` | 格式化：有 LSP 就用 LSP（C/C++/lua/python/json/yaml/cmake/toml/HTML/CSS/TS），否则用外部工具（bash→shfmt；markdown、html、css、scss、js、ts→prettier）；visual 模式下只格式化选中范围 |
 
 ### 1.4 Hex / 二进制视图
@@ -137,11 +137,11 @@ markdown 仍然自动折行（`wrap` + `linebreak`）。
 
 | 前缀 | 分组 | 前缀 | 分组 |
 |---|---|---|---|
-| `<leader>b` | buffer | `<leader>M` | markdown |
+| `<leader>b` | buffer | `<leader>M` | make |
 | `<leader>f` | find/file | `<leader>s` | session |
 | `<leader>g` | git | `<leader>u` | ui/toggle |
 | `<leader>l` | lsp | `<leader>x` | diagnostics/quickfix |
-| `<leader>m` | make | `<C-x>` | emacs prefix |
+| `<leader>m` | markdown | `<C-x>` | emacs prefix |
 | `[` / `]` | prev / next | `g` / `z` | goto / fold |
 
 按 `<leader>` 稍等即可看到分组面板；`<leader>fk` 可以搜索所有键位。
@@ -255,7 +255,7 @@ markdown 仍然自动折行（`wrap` + `linebreak`）。
 |---|---|
 | `<leader>xx` | 全部诊断 |
 | `<leader>xX` | 当前 buffer 的诊断 |
-| `<leader>xq` | quickfix 列表（`<leader>mm` 编译后的错误在这里） |
+| `<leader>xq` | quickfix 列表（`<leader>MM` 编译后的错误在这里） |
 | `<leader>xl` | location list |
 | `<leader>xs` | 文件符号（函数/结构体列表） |
 | `<leader>xr` | LSP 定义/引用（右侧打开） |
@@ -342,13 +342,15 @@ yazi 自己的键位（在 yazi 里按 `~` 或 `<F1>` 看完整帮助；下面�
 
 | 键 | 作用 |
 |---|---|
-| `<leader>Mm` | 开关渲染 |
-| `<leader>Mh` | 混合模式（光标所在行显示源码） |
-| `<leader>Mp` | 分屏预览 |
+| `<leader>mm` | 开关渲染（默认**不开**，按它才渲染） |
+| `<leader>mh` | 混合模式（光标所在行显示源码） |
+| `<leader>mp` | 分屏预览 |
 
+- **默认不渲染**：配置里设了 `preview = { enable = false }`（官方默认是 `true`，即附加到 buffer 就渲染）。设成 `false` 后打开 markdown 看到的是源码，按 `<leader>mm` 才渲染。
+- 小写 `:Markview toggle/enable/disable` 只作用于**当前 buffer**；大写 `:Markview Toggle/Enable/Disable` 是**全局**开关。
 - markdown buffer 里 `gx` 被改成 `:Markview open`（打开链接，buffer-local）。想保留原生 `gx` 就在配置里加 `preview = { map_gx = false }`。
 - `conceallevel` 由 markview 自己管理，所以 `options.lua` 里没有给 markdown 另设它。
-- 其它命令：`:Markview Enable/Disable/Toggle`（全局）、`:Markview enable/disable/toggle`（当前 buffer）、`:Markview linewiseToggle`、`:Markview splitClose`。
+- 其它命令：`:Markview linewiseToggle`（只显示光标行的源码）、`:Markview splitClose`、`:Markview render` / `:Markview clear`。
 - 只有执行 `:Markview traceExport` 时才会在当前目录写一个 `markview_log.txt`；日常渲染不会产生任何文件。
 
 ---
