@@ -11,7 +11,7 @@ vim.opt.shiftwidth = 4                  -- 自动缩进宽度
 vim.opt.expandtab = true                -- 将 Tab 转换为空格
 vim.opt.softtabstop = 4                 -- Backspace 删除 4 个空格 (兼容 tab 字符)
 vim.opt.backspace = "indent,eol,start"  -- 允许跨行/缩进删除, (default "indent,eol,start")
-vim.opt.wrap = false                    -- 自动换行
+vim.opt.wrap = true                     -- 自动换行
 vim.opt.linebreak = true                -- 自动换行会在单词边界处换, 而不是拆开字符, 只有开启wrap才有用, 中文要单独设置breakat (default) off
 vim.opt.cursorcolumn = false            -- 显示列高亮
 vim.opt.cursorline = true               -- 显示行高亮
@@ -54,8 +54,6 @@ end
 
 vim.opt.confirm = false                 -- 保存文件需要确认
 
--- auto-session 会按这个设置保存/恢复会话; 不设的话它会告警, 而且恢复后 filetype/高亮会错乱
-vim.opt.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 vim.opt.fileformat = "unix"             -- 设置当前文件的换行格式(default Windows: "dos" = "\r\n" = <CR><NL>, Unix: "unix" = "\n" = <NL>)
 vim.opt.fsync = true                    -- 每次保存时调用fsync写入物理硬件中, 而不是留在内存缓存。(default on)
 
@@ -65,7 +63,8 @@ vim.opt.iminsert = 0                    -- 决定插入模式的输入模式, �
 vim.opt.imsearch = 0                    -- 决定搜索模式的输入模式, (default -1 与iminsert相同行为) 0为lmap和IM关闭, 1为lmap开IM关
 vim.opt.inccommand = "split"            -- 使用替换命令时的显示效果, 如: ":%s/foo/bar/g"在(default "nosplit")下会在缓冲区实时预览, 而"split"会在下方小窗口显示屏幕外的预览, ""不显示
 vim.opt.autoindent = false              -- 自动缩进, 继承上一行缩进
-vim.opt.smartindent = true              -- 智能缩进
+vim.opt.smartindent = false             -- 智能缩进
+vim.opt.formatoptions:remove({ "r", "o" })  -- r 插入模式换行自动添加注释引导符"// "，o 普通模式自动插入注释引导符
 
 vim.opt.clipboard = "unnamedplus"       -- 系统剪切板支持(unnamedplus: *寄存器)(unnamed: +寄存器)
 -- vim 的 d 键附带剪切会把系统剪切板搞乱?
@@ -120,6 +119,43 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.opt_local.linebreak = true          -- 在单词边界换行
         -- vim.opt_local.spell = true           -- 已关闭: 不显示拼写波浪线; 需要时按 <leader>us 临时开
     end,
+})
+
+-- 回车/o/O 后只自动缩进, 不自动补注释符 --
+-- formatoptions 里的两个标志:
+--   r = 输入模式下按 <CR> 后自动插入注释符(如 //)
+--   o = 按 o / O 新开一行时自动插入注释符
+-- nvim 的 C/C++ ftplugin 会执行 setlocal fo-=t fo+=croql(见 $VIMRUNTIME/ftplugin/c.vim),
+-- 所以光改全局 vim.opt.formatoptions 没用, 必须用 FileType 事件在 ftplugin 之后再删掉这两个标志。
+-- (FileType 自动命令按注册顺序执行, filetypeplugin 在最前, 所以这里能覆盖它)
+-- SessionLoadPost 是兜底: 如果通过 :source / :mksession 之类的旧会话文件恢复,
+-- 里面存的 buffer-local formatoptions(带 r/o)会在 buffer 显示之后被写回来, 盖掉
+-- FileType/BufWinEnter 的清理, 所以会话加载完再把所有 buffer 扫一遍。
+-- 想只对 C/C++ 生效: FileType/BufWinEnter 那条改成 { "c", "cpp" } 即可。
+local function strip_comment_leader(buf)
+    local fo = vim.api.nvim_get_option_value("formatoptions", { buf = buf })
+    if fo:find("[ro]") then
+        vim.api.nvim_set_option_value("formatoptions", (fo:gsub("[ro]", "")), { buf = buf })
+    end
+end
+
+local function strip_comment_leader_all()
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(buf) then
+            strip_comment_leader(buf)
+        end
+    end
+end
+
+vim.api.nvim_create_autocmd({ "FileType", "BufWinEnter" }, {
+    pattern = "*",
+    callback = function(args)
+        strip_comment_leader(args.buf)
+    end,
+})
+
+vim.api.nvim_create_autocmd("SessionLoadPost", {
+    callback = strip_comment_leader_all,
 })
 
 -- 外部程序修改文件后自动重新加载(用 autoread), 从别的程序切回 nvim 时生效 -- 看 log 很有用

@@ -15,7 +15,6 @@
 | `lua/plugins/trouble.lua` | `<leader>x*` |
 | `lua/plugins/diffview.lua` | `<leader>g*`（diff/历史） |
 | `lua/plugins/markview.lua` | `<leader>m*` |
-| `lua/plugins/auto-session.lua` | `<leader>s*` |
 | `lua/plugins/lsp.lua` | `<leader>li`、`gd`、`<leader>lc`（后两个 buffer-local） |
 | `lua/plugins/blink.lua` | 插入/命令行模式的补全键位 |
 | `lua/plugins/autopairs.lua` | 插入模式括号补全（无自定义键位） |
@@ -138,10 +137,10 @@ markdown 仍然自动折行（`wrap` + `linebreak`）。
 | 前缀 | 分组 | 前缀 | 分组 |
 |---|---|---|---|
 | `<leader>b` | buffer | `<leader>M` | make |
-| `<leader>f` | find/file | `<leader>s` | session |
-| `<leader>g` | git | `<leader>u` | ui/toggle |
-| `<leader>l` | lsp | `<leader>x` | diagnostics/quickfix |
-| `<leader>m` | markdown | `<C-x>` | emacs prefix |
+| `<leader>f` | find/file | `<leader>u` | ui/toggle |
+| `<leader>g` | git | `<leader>x` | diagnostics/quickfix |
+| `<leader>l` | lsp | `<C-x>` | emacs prefix |
+| `<leader>m` | markdown | | |
 | `[` / `]` | prev / next | `g` / `z` | goto / fold |
 
 按 `<leader>` 稍等即可看到分组面板；`<leader>fk` 可以搜索所有键位。
@@ -355,26 +354,7 @@ yazi 自己的键位（在 yazi 里按 `~` 或 `<F1>` 看完整帮助；下面�
 
 ---
 
-## 10. auto-session（会话）
-
-| 键 | 作用 |
-|---|---|
-| `<leader>ss` | 保存当前 session |
-| `<leader>sr` | 恢复 session |
-| `<leader>sd` | 删除当前目录的 session |
-| `<leader>sS` | 搜索并切换 session（用 snacks picker） |
-| `<leader>sp` | 清理孤立的 session 文件 |
-
-- 默认 `auto_save = true` / `auto_restore = true`：退出时自动保存，进入同一目录时自动恢复。
-- session 文件位置：`~/.local/state/nvim/sessions/<按 %XX 编码的路径>.vim`（配置里从默认的 data 目录改到了 state 目录）。
-- `suppressed_dirs` 已设置：`~/`、`~/Downloads`、`~/Documents`、`/`、`/tmp`、`/tmp/**` 不生成 session。
-- `bypass_save_filetypes`：只有启动面板/文件管理器打开时不保存（避免产生无意义的 session）。
-- `purge_after_minutes = 43200`：30 天没访问的 session 自动清理。
-- 相关：`options.lua` 里按官方推荐设置了 `sessionoptions`，否则恢复后 filetype/高亮会错乱。
-
----
-
-## 11. lualine（状态栏，无键位）
+## 10. lualine（状态栏，无键位）
 
 显示内容：模式 | 分支 · diff · 诊断 | 文件相对路径 | 文件类型 | 进度 | 行列。
 `theme = "auto"` 会跟随 colorscheme（catppuccin 自带对应的 lualine 主题）。
@@ -383,15 +363,14 @@ yazi 自己的键位（在 yazi 里按 `~` 或 `<F1>` 看完整帮助；下面�
 
 ---
 
-## 12. 常用命令速查
+## 11. 常用命令速查
 
 | 命令 | 来源 | 作用 |
 |---|---|---|
 | `<localleader>l` / `:Lazy` | lazy.nvim | 插件管理（`S` 同步、`U` 更新、`C` 检查、`X` 清理无用插件目录） |
-| `<localleader>h` / `:checkhealth` | nvim | 健康检查（`vim.lsp` / `nvim-treesitter` / `snacks` / `auto-session` 等） |
+| `<localleader>h` / `:checkhealth` | nvim | 健康检查（`vim.lsp` / `nvim-treesitter` / `snacks` 等） |
 | `:Mason` | mason | 图形化安装 LSP / 工具 |
 | `:MasonInstall <pkg>` / `:MasonLog` | mason | 安装 / 查看日志 |
-| `:AutoSession save/restore/delete/toggle/purgeOrphaned/search` | auto-session | 会话操作 |
 | `:Trouble [mode] toggle` | trouble | 例如 `:Trouble diagnostics toggle`、`:Trouble lsp toggle win.position=right` |
 | `:Yazi` / `:Yazi cwd` / `:Yazi toggle` | yazi.nvim | 打开文件管理器 / 工作目录 / 继续上次会话 |
 | `:Markview` / `:Markview splitToggle` / `:Markview traceExport` | markview | 渲染控制（traceExport 会在当前目录写 `markview_log.txt`） |
@@ -401,7 +380,7 @@ yazi 自己的键位（在 yazi 里按 `~` 或 `<F1>` 看完整帮助；下面�
 
 ---
 
-## 13. 自己排查键位
+## 12. 自己排查键位
 
 | 做法 | 说明 |
 |---|---|

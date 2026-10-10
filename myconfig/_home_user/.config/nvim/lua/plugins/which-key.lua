@@ -15,7 +15,6 @@ return {
                 { "<leader>l", group = "lsp" },
                 { "<leader>m", group = "markdown" },
                 { "<leader>M", group = "make" },
-                { "<leader>s", group = "session" },
                 { "<leader>u", group = "ui/toggle" },
                 { "<leader>x", group = "diagnostics/quickfix" },
                 { "[", group = "prev" },
